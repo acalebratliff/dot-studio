@@ -1,0 +1,19 @@
+<idea-plugin>
+    <id>io.github.acalebratliff.dotstudio</id>
+    <name>DOT Studio</name>
+    <vendor url="https://github.com/acalebratliff">acalebratliff</vendor>
+
+    <description><![CDATA[
+    Support for Graphviz DOT files (<code>.dot</code>, <code>.gv</code>). In development; no features are available yet.
+    <p>Planned for the first release:</p>
+    <ul>
+        <li>Syntax highlighting, folding, structure view, brace matching and commenting for DOT files</li>
+        <li>A live preview in a split editor that renders in the background, with zoom, pan and a layout engine picker</li>
+        <li>A bundled renderer, so no Graphviz installation is needed</li>
+        <li>SVG and PNG export</li>
+    </ul>
+    <p>Source code and issue tracker: <a href="https://github.com/acalebratliff/dot-studio">github.com/acalebratliff/dot-studio</a></p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+</idea-plugin>
