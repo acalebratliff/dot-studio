@@ -1,6 +1,7 @@
 package io.github.acalebratliff.dotstudio.preview
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.components.JBPanelWithEmptyText
@@ -19,6 +20,7 @@ internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope) {
 
     init {
         if (isJcefAvailable()) {
+            service<JcefProxyPreload>().beforeFirstBrowser()
             val browser = JcefPreviewBrowser(parent)
             pipeline = PreviewPipeline(scope, browser, browser::show)
             Disposer.register(parent, pipeline)
