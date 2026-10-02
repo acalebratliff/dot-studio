@@ -10,3 +10,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `.dot` and `.gv` files open as DOT files, with syntax highlighting for keywords, IDs, numbers, quoted and HTML strings, comments and edge operators
 - DOT colours can be changed in Settings | Editor | Color Scheme | DOT
+- Comment and uncomment lines (`//`) and blocks (`/* */`) in DOT files
+- Matching `{}` and `[]` are highlighted, and typing `[` inserts the closing `]`
