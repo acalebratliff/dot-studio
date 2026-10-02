@@ -1,0 +1,37 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: input
+    id: ide
+    attributes:
+      label: IDE and version
+      description: Help > About, for example IntelliJ IDEA 2025.2.6.3 (build 252.xxx)
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: DOT Studio version
+    validations:
+      required: true
+  - type: textarea
+    id: dot-input
+    attributes:
+      label: DOT input
+      description: The smallest DOT source that shows the problem.
+      render: dot
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true

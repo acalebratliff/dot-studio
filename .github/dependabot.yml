@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    target-branch: main
+    schedule:
+      interval: weekly
+    ignore:
+      # Held at the last Kotlin release that compiles API 2.1 without deprecation while sinceBuild is 252.
+      - dependency-name: "org.jetbrains.kotlin*"
+        versions: [">=2.4.0"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    target-branch: main
+    schedule:
+      interval: weekly
