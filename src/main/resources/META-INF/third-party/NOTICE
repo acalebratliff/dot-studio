@@ -1,0 +1,37 @@
+DOT Studio is licensed under the Apache License 2.0.
+
+This plugin bundles the following third-party software. Each component is
+distributed unmodified, under its own licence, in the file
+preview/viz-js/viz-global.js inside the plugin jar.
+
+--------------------------------------------------------------------------------
+viz-js (@viz-js/viz) 3.31.0
+--------------------------------------------------------------------------------
+Copyright (c) Michael Daines
+Licence: MIT, see viz-js-LICENSE
+Source: https://github.com/mdaines/viz-js/tree/release-viz-3.31.0
+        (tag release-viz-3.31.0, commit c8ce050d28eb0dc1ed1629ea32ab7f3dc117db0f)
+Distributed file taken from:
+        https://registry.npmjs.org/@viz-js/viz/-/viz-3.31.0.tgz
+
+--------------------------------------------------------------------------------
+Graphviz 16.1.0 (compiled to WebAssembly inside viz-js, object form)
+--------------------------------------------------------------------------------
+Copyright (c) 2011 AT&T Intellectual Property (Graphviz source file headers)
+Contributors: https://graphviz.org/credits/
+Licence: Eclipse Public License 2.0, see graphviz-EPL-2.0.txt
+Further notices carried by individual source files: graphviz-embedded-notices.txt
+Corresponding source code:
+        https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/16.1.0/graphviz-16.1.0.tar.gz
+        SHA-256 beea483ab130f456c1c3905f4f2e40778a9c493c3d73ae8012367d552d71ca84
+Build recipe that produced the object code:
+        https://github.com/mdaines/viz-js/blob/release-viz-3.31.0/packages/viz/backend/Dockerfile
+
+--------------------------------------------------------------------------------
+Expat (libexpat) 2.8.5 (compiled to WebAssembly inside viz-js, object form)
+--------------------------------------------------------------------------------
+Copyright (c) 1998-2000 Thai Open Source Software Center Ltd and Clark Cooper
+Copyright (c) 2001-2025 Expat maintainers
+Licence: MIT, see expat-COPYING
+Source: https://github.com/libexpat/libexpat/releases/download/R_2_8_5/expat-2.8.5.tar.gz
+        SHA-256 920dde485e15eda0cce8d2310b41d492c534e5e3d89ad407a0b4176dd2ff88fe
