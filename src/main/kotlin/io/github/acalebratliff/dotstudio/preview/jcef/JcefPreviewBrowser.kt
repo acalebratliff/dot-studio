@@ -1,9 +1,13 @@
 package io.github.acalebratliff.dotstudio.preview.jcef
 
+import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.diagnostic.debug
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.editor.colors.EditorColorsListener
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.jcef.JBCefBrowser
@@ -13,6 +17,8 @@ import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.DotRenderer
 import io.github.acalebratliff.dotstudio.preview.PreviewState
 import io.github.acalebratliff.dotstudio.preview.RenderResult
+import io.github.acalebratliff.dotstudio.preview.currentPreviewTheme
+import io.github.acalebratliff.dotstudio.preview.previewThemeScript
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,6 +48,9 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     @Volatile private var pageFailure: String? = null
 
     @Volatile private var noticeShown = false
+
+    // Built on the EDT (constructor, theme listeners) and read on the CEF thread when the page loads.
+    @Volatile private var themeScript = previewThemeScript(currentPreviewTheme())
     private val root = JPanel(BorderLayout()).apply { add(browser.component) }
     private val pendingRenders = ConcurrentHashMap<Long, CompletableDeferred<RenderResult>>()
     private val nextRenderId = AtomicLong()
@@ -75,7 +84,10 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
                         PAGE_URL,
                         0,
                     )
+                    // Ready first, then the theme: a theme change in between sees the page ready and applies itself,
+                    // and this run picks up the newest script. Applying a theme twice is harmless.
                     pageLoad.complete(Unit)
+                    cefBrowser.executeJavaScript(themeScript, PAGE_URL, 0)
                 }
 
                 override fun onLoadError(
@@ -106,6 +118,9 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
             },
             browser.cefBrowser,
         )
+        val connection = ApplicationManager.getApplication().messageBus.connect(parent)
+        connection.subscribe(LafManagerListener.TOPIC, LafManagerListener { applyTheme() })
+        connection.subscribe(EditorColorsManager.TOPIC, EditorColorsListener { applyTheme() })
         browser.loadURL(PAGE_URL)
     }
 
@@ -140,6 +155,12 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
             val message = pageFailure?.let { DotStudioBundle.message("preview.error.page", it) } ?: state.message
             withContext(Dispatchers.EDT) { setContent(JBPanelWithEmptyText().withEmptyText(message), notice = true) }
         }
+    }
+
+    private fun applyTheme() {
+        themeScript = previewThemeScript(currentPreviewTheme())
+        LOG.debug { "Theme changed: $themeScript" }
+        if (pageLoad.isCompleted && pageFailure == null) execute(themeScript)
     }
 
     private fun setContent(content: JComponent, notice: Boolean) {

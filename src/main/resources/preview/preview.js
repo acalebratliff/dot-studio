@@ -50,6 +50,16 @@ window.dotStudio = (function () {
       if (busyId === id) stopWorker();
     },
 
+    // Colours arrive as data from JcefPreviewBrowser; setting them through the CSSOM needs no inline styles under the CSP.
+    setTheme(theme) {
+      const style = document.documentElement.style;
+      style.setProperty('--background', theme.background);
+      style.setProperty('--foreground', theme.foreground);
+      style.setProperty('--error-background', theme.errorBackground);
+      style.setProperty('--error-border', theme.errorBorder);
+      style.colorScheme = theme.colorScheme;
+    },
+
     showRendering() {
       document.body.classList.add('rendering');
     },
