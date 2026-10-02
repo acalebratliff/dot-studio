@@ -4,7 +4,7 @@
     <vendor url="https://github.com/acalebratliff">acalebratliff</vendor>
 
     <description><![CDATA[
-    Support for Graphviz DOT files (<code>.dot</code>, <code>.gv</code>). In development; no features are available yet.
+    Support for Graphviz DOT files (<code>.dot</code>, <code>.gv</code>). In development; syntax highlighting is available.
     <p>Planned for the first release:</p>
     <ul>
         <li>Syntax highlighting, folding, structure view, brace matching and commenting for DOT files</li>
@@ -16,4 +16,16 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+
+    <resource-bundle>messages.DotStudioBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="DotStudio" language="DotStudio" extensions="dot;gv" fieldName="INSTANCE"
+                  implementationClass="io.github.acalebratliff.dotstudio.lang.DotFileType"/>
+        <lang.parserDefinition language="DotStudio"
+                               implementationClass="io.github.acalebratliff.dotstudio.lang.DotParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="DotStudio"
+                                       implementationClass="io.github.acalebratliff.dotstudio.lang.DotSyntaxHighlighterFactory"/>
+        <colorSettingsPage implementation="io.github.acalebratliff.dotstudio.lang.DotColorSettingsPage"/>
+    </extensions>
 </idea-plugin>
