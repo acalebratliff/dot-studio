@@ -4,7 +4,7 @@
     <vendor url="https://github.com/acalebratliff">acalebratliff</vendor>
 
     <description><![CDATA[
-    Support for Graphviz DOT files (<code>.dot</code>, <code>.gv</code>). In development; syntax highlighting is available.
+    Support for Graphviz DOT files (<code>.dot</code>, <code>.gv</code>). In development; syntax highlighting, brace matching and commenting are available.
     <p>Planned for the first release:</p>
     <ul>
         <li>Syntax highlighting, folding, structure view, brace matching and commenting for DOT files</li>
@@ -27,5 +27,7 @@
         <lang.syntaxHighlighterFactory language="DotStudio"
                                        implementationClass="io.github.acalebratliff.dotstudio.lang.DotSyntaxHighlighterFactory"/>
         <colorSettingsPage implementation="io.github.acalebratliff.dotstudio.lang.DotColorSettingsPage"/>
+        <lang.commenter language="DotStudio" implementationClass="io.github.acalebratliff.dotstudio.lang.DotCommenter"/>
+        <lang.braceMatcher language="DotStudio" implementationClass="io.github.acalebratliff.dotstudio.lang.DotBraceMatcher"/>
     </extensions>
 </idea-plugin>
