@@ -1,0 +1,21 @@
+<fold text='/*...*/'>/* Folds:
+   bodies, lists and comments over several lines */</fold>
+digraph G <fold text='{...}'>{
+    /* one line */
+    a [shape=box, color=red]
+    b <fold text='[...]'>[
+        shape=box,
+        color=red
+    ]</fold>
+    subgraph cluster_0 <fold text='{...}'>{
+        c -> d
+        <fold text='{...}'>{
+            e
+        }</fold>
+    }</fold>
+    subgraph one_line { f }
+}</fold>
+digraph empty <fold text='{...}'>{
+}</fold>
+graph <fold text='{...}'>{
+    g -- h</fold>

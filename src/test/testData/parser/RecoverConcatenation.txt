@@ -21,7 +21,7 @@ DOT file(0,38)
                 PsiElement(QUOTED_STRING)('"x"')(23,26)
                 PsiWhiteSpace(' ')(26,27)
                 PsiElement(+)('+')(27,28)
-                PsiErrorElement:HTML_STRING or QUOTED_STRING expected, got ']'(28,28)
+                PsiErrorElement:<string> expected, got ']'(28,28)
                   <empty list>
           PsiWhiteSpace(' ')(28,29)
           PsiElement(])(']')(29,30)

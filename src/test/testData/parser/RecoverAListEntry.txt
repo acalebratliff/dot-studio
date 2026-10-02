@@ -17,7 +17,7 @@ DOT file(0,58)
               DotIdImpl(id)(17,22)
                 PsiElement(ID)('color')(17,22)
               PsiElement(=)('=')(22,23)
-              PsiErrorElement:<id> expected, got ','(23,23)
+              PsiErrorElement:<attribute value> expected, got ','(23,23)
                 <empty list>
             PsiWhiteSpace(' ')(23,24)
             PsiElement(,)(',')(24,25)

@@ -10,7 +10,7 @@ DOT file(0,38)
           DotIdImpl(id)(14,15)
             PsiElement(ID)('a')(14,15)
         PsiElement(,)(',')(15,16)
-        PsiErrorElement:',', <edge rhs> or <id> expected, got ';'(16,16)
+        PsiErrorElement:',', <edge operator> or <id> expected, got ';'(16,16)
           <empty list>
       PsiWhiteSpace(' ')(16,17)
       PsiElement(;)(';')(17,18)
