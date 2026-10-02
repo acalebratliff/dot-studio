@@ -17,6 +17,7 @@
 - **Scope** comes from `~/Vaults/projects/dot-plugin/build-execution-brief.md`. Work outside it goes to the Product Owner first.
 - **Standards:** every change follows `CODING-STANDARDS.md`.
 - **PR path:** engineer (feature branch, own git worktree) → Code Reviewer → Lead (integration, CI green) → Product Owner merges. Never push to `main`, never force-push.
+- **Commits and PRs** never contain Claude session URLs (Product Owner's global rule).
 - **Decisions:** calls the Product Owner hasn't made are recorded in `DECISIONS.md`. His rulings are quoted verbatim.
 - **Cost:** 1–2 agents active at a time. Briefs point at docs rather than restating them. Reports are a few lines long.
 - **Agents check their own output** (test runs, verifier reports, screenshots) before reporting done.

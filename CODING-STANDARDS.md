@@ -44,15 +44,15 @@ Key words: **MUST** means a PR is rejected without it. **SHOULD** means a deviat
 - Long-running work (renders) MUST be cancelled when the owning disposable is disposed.
 
 ### 1.5 plugin.xml and API status
-- **MUST register every extension in `plugin.xml`.** There is a single `<depends>com.intellij.modules.platform</depends>`. Actions and settings take their text from the resource bundle. https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html
-- **The plugin `<id>` cannot be changed after the first public upload** (same page). It is fixed in the scaffold PR.
+- **MUST register every extension in `plugin.xml`.** Dependencies are `<depends>com.intellij.modules.platform</depends>` plus exactly one optional dependency, `<depends optional="true" config-file="…">com.intellij.modules.jcef</depends>`, which holds all JCEF registrations. From 2026.2 (262) JCEF is a separate bundled plugin, and without this dependency the plugin throws `NoClassDefFoundError: JBCefApp` (preview spike, 2026-10-02). Actions and settings take their text from the resource bundle. https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html
+- **The plugin `<id>` cannot be changed after the first public upload** (same page). The Product Owner confirms it before the first upload (see DECISIONS.md).
 - **MUST NOT use APIs marked `@ApiStatus.Internal`, `@ApiStatus.Experimental`, `@ApiStatus.ScheduledForRemoval`, `@ApiStatus.Obsolete` or `@Deprecated`.** Do not call `@OverrideOnly` methods or extend `@NonExtendable` types. https://plugins.jetbrains.com/docs/intellij/verifying-plugin-compatibility.html. Plugin Verifier enforces this (4.4). If no alternative exists, the PR MUST say so and link the API.
 - `sinceBuild` = 252 (2025.2). `untilBuild` is closed at the highest branch Plugin Verifier has passed (`<branch>.*`). JetBrains warns that an open range "will include all future builds". https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html. Raising `untilBuild` is its own PR, with a green verifier run attached.
 - **Build against the lowest supported platform (2025.2).** Per that page, 2026.2 runs on Java 25 while 2025.2 uses Java 21. So we compile to Java 21 and verify on 2026.2. Branch numbers (confirmed from the JetBrains releases API, 2026-10-02): 2025.2 = 252, 2026.2 = 262.
 
 ### 1.6 Custom language (lexer, parser, PSI)
 - The grammar lives in `Dot.bnf` and the lexer in `Dot.flex`. Both are generated at build time by the IntelliJ Platform Gradle Plugin's Grammar-Kit subplugin (`org.jetbrains.intellij.platform.grammarkit`, tasks `generateLexer` and `generateParser`). https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-plugins.html. The standalone `org.jetbrains.grammarkit` plugin is archived and MUST NOT be used.
-  - Generated output goes to `build/generated/`. It is **not committed** and not put under `src/` (the doc's example uses `src/`; we deliberately don't).
+  - Generated output goes to `build/generated/`. It is **not committed** and not put under `src/`.
   - The subplugin is applied in the first grammar PR, not before. That PR proves `generateLexer` and `generateParser` under the configuration cache.
 - The grammar MUST recover from errors: a typo in one statement must not turn the rest of the file into an error. Each recovery rule needs a parsing test (4.1).
 - **No stubs or indexes in v1.** Stubs are "needed for things like methods or fields visible from other files" https://plugins.jetbrains.com/docs/intellij/stub-indexes.html. DOT has no cross-file references, so adding them would be speculative code (section 7).
@@ -64,7 +64,8 @@ Key words: **MUST** means a PR is rejected without it. **SHOULD** means a deviat
 - **MUST register `JBCefBrowser` and every `JBCefJSQuery` with the split editor's disposable.** Both are `JBCefDisposable`. (same page)
 - **MUST load the page, viz-js and the wasm from plugin resources only.** Serve them with a `CefRequestHandler`/`CefResourceRequestHandler` mapped to a fixed internal origin, as the page's `JCefImageViewer` reference does. (same page)
   - No remote URLs, no CDN, no `file://` paths into the user's filesystem.
-  - The page sets a Content-Security-Policy that allows only that origin plus `'wasm-unsafe-eval'`. The CSP is our hardening rule; the JetBrains doc does not specify one.
+  - The CSP is sent as a response header and allows only that origin plus `'wasm-unsafe-eval'`: `default-src 'none'`; `script-src`, `worker-src`, `style-src`, `img-src` and `connect-src` set to the origin. The CSP is our hardening rule; the JetBrains doc does not specify one.
+- **MUST render in a Web Worker with a timeout.** Cancellation is `worker.terminate()`, the only way to stop a running Graphviz layout. That is what latest-wins depends on. Pathological graphs run for tens of seconds and then throw `RangeError` (preview spike, 2026-10-02).
   - Navigation away from that origin is cancelled in the request handler.
 - **DOT source reaches JS only as data.** Pass it through a JSON-encoded argument, never by concatenating it into `executeJavaScript` source.
 - **JS→Kotlin calls go only through `JBCefJSQuery`.** Handlers validate their input and run nothing heavy on the CEF thread.
@@ -120,7 +121,8 @@ Source: https://plugins.jetbrains.com/docs/marketplace/jetbrains-marketplace-app
   - Use trailing commas at declaration sites.
 - **Visibility: `internal` by default.** Use `private` where possible. `public` only when the platform needs it. (Classes registered in plugin.xml may be `internal`: Kotlin compiles them public in bytecode.) Declare return types explicitly on non-private functions. The conventions recommend explicit visibility and types to avoid accidental API.
 - Kotlin compiler: `allWarningsAsErrors = true` from the first commit.
-- **MUST set `apiVersion` and `languageVersion` to the Kotlin stdlib bundled with `sinceBuild`** (2025.2 bundles 2.1, so `KOTLIN_2_1`). A plugin supporting several platform versions "must either target the lowest bundled stdlib version" or ship its own. https://plugins.jetbrains.com/docs/intellij/using-kotlin.html. Raising `sinceBuild` is the only reason to raise these. `jvmToolchain(21)` sets the JVM target, so do not also set `jvmTarget`.
+- **MUST set `apiVersion` to the Kotlin stdlib bundled with `sinceBuild`** (2025.2 bundles 2.1, so `KOTLIN_2_1`). A plugin supporting several platform versions "must either target the lowest bundled stdlib version" or ship its own. https://plugins.jetbrains.com/docs/intellij/using-kotlin.html. `languageVersion` SHOULD match, if it compiles without warnings.
+  - The Kotlin compiler supports only about three previous API versions. So the Kotlin Gradle plugin is held at the last release that supports API 2.1 while `sinceBuild` is 252, enforced by a Dependabot ignore rule. Raising `sinceBuild` is the only reason to raise these. `jvmToolchain(21)` sets the JVM target, so do not also set `jvmTarget`.
 
 ### 3.2 Linter choice: **ktlint, through the kotlinter Gradle plugin**
 - ktlint 1.8.0 (https://github.com/pinterest/ktlint) via `org.jmailen.kotlinter` 5.7.0 (https://github.com/jeremymailen/kotlinter-gradle). Tasks `lintKotlin` and `formatKotlin`.
@@ -145,7 +147,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
 - **Plugin id, name and vendor live only in `plugin.xml`.** They are not set in `pluginConfiguration` and not derived from `group`, because the id can never change after the first upload.
 - Never declare `kotlinx-coroutines` or the Kotlin stdlib as dependencies, and check transitive dependencies for them. "Plugins must always use the bundled library." (using-kotlin page)
 - Gradle Changelog Plugin plus Keep a Changelog. `getChangelog --unreleased` feeds the release draft, and `patchChangelog` runs on release. The IntelliJ Platform Gradle Plugin now preconfigures this, so no changelog block is needed in `build.gradle.kts`.
-- CI shape: separate **build**, **test** (`./gradlew check`) and **verify** (`./gradlew verifyPlugin`) jobs; `concurrency` with `cancel-in-progress`; reports uploaded on failure; a release draft on push to main; publishing triggered by a GitHub release.
+- CI shape: separate **build**, **test** (`./gradlew check`) and **verify** (`./gradlew verifyPlugin`) jobs; `concurrency` with `cancel-in-progress`; reports uploaded on failure. *Release PR only (not before):* a release draft on push to main, and publishing triggered by a GitHub release.
 - Dependabot for `gradle` and `github-actions`. Change the template's `target-branch: "next"` to `main`.
 - `.run/` shared run configurations (Run Plugin, Run Tests, Run Verifications).
 - Signing and publishing configured from env vars only (section 5).
@@ -196,7 +198,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
 
 ### 5.1 GitHub Actions
 - **MUST pin every `uses:` to a full 40-character commit SHA,** with the tag in a trailing comment (`# v7.0.0`). "Pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release." https://docs.github.com/en/actions/reference/security/secure-use. Dependabot keeps the SHAs current.
-- **Permissions:** top-level `permissions: contents: read`. Only the release-draft and publish jobs get `contents: write`.
+- **Permissions:** top-level `permissions: contents: read`. Only the release-draft and publish jobs (added in the release PR) get `contents: write`.
 - **Triggers and inputs:** no `pull_request_target`. Untrusted values (`github.event.*.body`, titles, branch names) reach shell steps **only through `env:`**, never through `${{ }}` inside `run:`. (same page)
 
 ### 5.2 Gradle
@@ -204,7 +206,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
 - **Dependency verification: SHOULD enable `gradle/verification-metadata.xml` (sha256)** once the scaffold dependency set is stable. https://docs.gradle.org/current/userguide/dependency_verification.html
   - The doc warns that bootstrapping "trusts whatever is currently in your repositories", so the first file gets a reviewed PR of its own.
   - Every later change to it shows up as a reviewable diff.
-  - Open question for Aaron: the IntelliJ Platform artifacts make this file large, and the cost is real. Decide in the scaffold PR.
+  - Decided (DECISIONS.md): the verification file comes in its own reviewed PR once scaffold dependencies settle.
 
 ### 5.3 Bundled viz-js (and the Graphviz inside it)
 - **Source of the files:**
@@ -220,7 +222,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
   - libexpat is MIT and needs its notice.
 - **Where the licences ship:** inside the plugin distribution under `META-INF/third-party/` (`viz-js-LICENSE`, `graphviz-EPL-2.0.txt`, `expat-COPYING`, and a `NOTICE` listing component, version, licence and source URL). The same list goes in the README.
   - Verify the expat and Graphviz licence texts against the actual 16.1.0 and 2.8.5 tarballs when bundling. This was not done for this draft.
-- **Our own licence:** the repo's licence must be compatible with shipping EPL-2.0 object code alongside it. Choosing it is Aaron's call. MIT or Apache-2.0 are both fine for our own code.
+- **Our own licence:** the repo's licence must be compatible with shipping EPL-2.0 object code alongside it. Decided: Apache-2.0 (DECISIONS.md).
 
 ### 5.4 Signing and publishing secrets
 - **Generating the key:** RSA 4096, encrypted, made locally with `openssl genpkey -aes-256-cbc …`. The key and certificate live under `~/.config/dot-studio/signing/` (mode 600). https://plugins.jetbrains.com/docs/intellij/plugin-signing.html
@@ -248,7 +250,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
    - No unused parameters, functions, classes, settings or extension points.
    - No interfaces with a single implementation, unless that implementation is the test seam named in 1.7.
    - No "for future use" hooks.
-3. **No `TODO`/`FIXME` without an issue link:** `// TODO(#42): …`. A CI check fails on a bare `TODO`/`FIXME` in any tracked text file (including `.bnf`, `.flex`, `.xml`, `.kts`; excluding `gradlew*` and `*.md`), matching every occurrence, not just the first on a line.
+3. **No `TODO`/`FIXME` without an issue link:** `// TODO(#42): …`. A CI check fails on a bare `TODO`/`FIXME` in any tracked text file (including `.bnf`, `.flex`, `.xml`, `.kts`; excluding `gradlew*`, `*.md`, `.github/workflows/*` and the self-test fixtures in `.github/lint-fixtures/`), matching every occurrence, not just the first on a line.
 4. **No catch-all swallowing.**
    - No `catch (e: Exception) {}`, no `catch (e: Throwable)`, no `runCatching` that discards the failure.
    - Catch the specific exception, then handle it, rethrow it, or log it with context.
@@ -262,7 +264,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
 11. **No invented APIs.** Every platform API used must exist in the 2025.2 SDK and pass the verifier. When a PR uses an unfamiliar API, its description links the SDK doc or source.
 12. **No unverified claims** in README, listing, changelog or commit messages ("fast", "robust", "production-ready"). Performance statements carry a measured number and how it was measured.
 13. **No suppressions without a reason.** `@Suppress`, ktlint disables and baseline entries each carry a comment explaining why the rule is wrong *here*.
-14. **No hardcoded user-visible strings** (1.8). A CI check flags string literals passed to `Messages.show*`, notification and UI-DSL text calls in `src/main`.
+14. **No hardcoded user-visible strings** (1.8). A CI check flags string literals passed to these calls in `src/main`: `Messages\.show\w*\(`, `Notification\(`, `text\s*=\s*"`, `label\("`, `button\("`.
    - Every grep-based check MUST fail closed (a grep error fails the job).
    - Every grep-based check MUST be proven in CI by a bad sample it catches.
 15. **Consistency over novelty.** A new pattern (a new concurrency primitive, a new way to talk to JCEF) needs a PR that introduces it alone, with the reason.
