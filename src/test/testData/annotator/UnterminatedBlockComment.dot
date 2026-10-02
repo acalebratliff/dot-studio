@@ -1,0 +1,2 @@
+digraph { a } <error descr="Unterminated comment">/* never closed
+</error>

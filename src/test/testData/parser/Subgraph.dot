@@ -1,0 +1,6 @@
+digraph {
+    subgraph cluster_x { a }
+    subgraph { b }
+    { c }
+    subgraph outer { subgraph inner { d } }
+}

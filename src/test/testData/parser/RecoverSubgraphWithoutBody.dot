@@ -1,0 +1,4 @@
+digraph {
+    subgraph s;
+    a -> b
+}

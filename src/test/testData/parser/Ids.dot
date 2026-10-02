@@ -1,0 +1,5 @@
+digraph {
+    alpha_1 -42 .5 "say \"hi\"" <<b>bold</b>>
+    a [label="one " + "two" + "three"]
+    b [label=<x> + <y>] c [label="p" + <q> + "r"]
+}

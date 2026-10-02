@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
+import io.github.acalebratliff.dotstudio.lang.psi.DotTypes
 
 internal object DotHighlighterColors {
     val KEYWORD = createTextAttributesKey("DOT_KEYWORD", DefaultLanguageHighlighterColors.KEYWORD)
@@ -35,19 +36,19 @@ internal class DotSyntaxHighlighter : SyntaxHighlighterBase() {
     override fun getTokenHighlights(tokenType: IElementType): Array<TextAttributesKey> = pack(attributesFor(tokenType))
 
     private fun attributesFor(tokenType: IElementType): TextAttributesKey? = when (tokenType) {
-        in DotTokenTypes.KEYWORDS -> DotHighlighterColors.KEYWORD
-        DotTokenTypes.ID -> DotHighlighterColors.ID
-        DotTokenTypes.NUMERAL -> DotHighlighterColors.NUMERAL
-        DotTokenTypes.QUOTED_STRING -> DotHighlighterColors.QUOTED_STRING
-        DotTokenTypes.HTML_STRING -> DotHighlighterColors.HTML_STRING
-        DotTokenTypes.LINE_COMMENT -> DotHighlighterColors.LINE_COMMENT
-        DotTokenTypes.BLOCK_COMMENT -> DotHighlighterColors.BLOCK_COMMENT
-        in DotTokenTypes.EDGEOPS -> DotHighlighterColors.EDGEOP
-        in DotTokenTypes.OPERATORS -> DotHighlighterColors.OPERATOR
-        DotTokenTypes.LBRACE, DotTokenTypes.RBRACE -> DotHighlighterColors.BRACES
-        DotTokenTypes.LBRACKET, DotTokenTypes.RBRACKET -> DotHighlighterColors.BRACKETS
-        DotTokenTypes.SEMICOLON -> DotHighlighterColors.SEMICOLON
-        DotTokenTypes.COMMA -> DotHighlighterColors.COMMA
+        in DotTokenSets.KEYWORDS -> DotHighlighterColors.KEYWORD
+        DotTypes.ID -> DotHighlighterColors.ID
+        DotTypes.NUMERAL -> DotHighlighterColors.NUMERAL
+        DotTypes.QUOTED_STRING -> DotHighlighterColors.QUOTED_STRING
+        DotTypes.HTML_STRING -> DotHighlighterColors.HTML_STRING
+        DotTypes.LINE_COMMENT -> DotHighlighterColors.LINE_COMMENT
+        DotTypes.BLOCK_COMMENT -> DotHighlighterColors.BLOCK_COMMENT
+        in DotTokenSets.EDGEOPS -> DotHighlighterColors.EDGEOP
+        in DotTokenSets.OPERATORS -> DotHighlighterColors.OPERATOR
+        DotTypes.LBRACE, DotTypes.RBRACE -> DotHighlighterColors.BRACES
+        DotTypes.LBRACKET, DotTypes.RBRACKET -> DotHighlighterColors.BRACKETS
+        DotTypes.SEMICOLON -> DotHighlighterColors.SEMICOLON
+        DotTypes.COMMA -> DotHighlighterColors.COMMA
         TokenType.BAD_CHARACTER -> HighlighterColors.BAD_CHARACTER
         else -> null
     }

@@ -1,0 +1,4 @@
+digraph {
+    // comment
+    a /* inline */ -> b # hash
+}

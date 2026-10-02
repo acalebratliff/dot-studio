@@ -27,6 +27,7 @@ kotlin {
 sourceSets {
     main {
         java.srcDir(tasks.generateLexer.map { it.targetRootOutputDir.get() })
+        java.srcDir(tasks.generateParser.map { it.targetRootOutputDir.get() })
     }
 }
 
@@ -63,6 +64,12 @@ intellijPlatform {
 
 tasks.generateLexer {
     sourceFile = layout.projectDirectory.file("src/main/grammars/Dot.flex")
+}
+
+tasks.generateParser {
+    sourceFile = layout.projectDirectory.file("src/main/grammars/Dot.bnf")
+    pathToParser = "io/github/acalebratliff/dotstudio/lang/parser/DotParser.java"
+    pathToPsiRoot = "io/github/acalebratliff/dotstudio/lang/psi"
 }
 
 tasks.register<VerifyVendoredChecksums>("verifyVizJsChecksums") {

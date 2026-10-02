@@ -4,11 +4,12 @@ import com.intellij.lang.BracePair
 import com.intellij.lang.PairedBraceMatcher
 import com.intellij.psi.PsiFile
 import com.intellij.psi.tree.IElementType
+import io.github.acalebratliff.dotstudio.lang.psi.DotTypes
 
 internal class DotBraceMatcher : PairedBraceMatcher {
     private val pairs = arrayOf(
-        BracePair(DotTokenTypes.LBRACE, DotTokenTypes.RBRACE, true),
-        BracePair(DotTokenTypes.LBRACKET, DotTokenTypes.RBRACKET, false),
+        BracePair(DotTypes.LBRACE, DotTypes.RBRACE, true),
+        BracePair(DotTypes.LBRACKET, DotTypes.RBRACKET, false),
     )
 
     override fun getPairs(): Array<BracePair> = pairs

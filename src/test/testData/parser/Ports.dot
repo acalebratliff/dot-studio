@@ -1,0 +1,6 @@
+digraph {
+    a:p
+    a:p:ne -> b:s
+    "x":"port":_
+    c:n:c
+}

@@ -1,0 +1,4 @@
+digraph {
+    node m = [shape=box]
+    edge n = [color=red][style=bold]
+}

@@ -1,0 +1,4 @@
+graph first { a -- b }
+
+digraph second { a -> b }
+strict graph {}
