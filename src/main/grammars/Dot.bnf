@@ -1,0 +1,104 @@
+// Grammar per https://graphviz.org/doc/info/lang.html; rule names follow the spec.
+// Where the spec is silent, Graphviz 16.1.0's lib/cgraph/grammar.y decides.
+{
+  parserClass="io.github.acalebratliff.dotstudio.lang.parser.DotParser"
+  // Element types keep the spec's lower-case rule names, so `graph`, `subgraph` and `id` don't clash with the tokens
+  // GRAPH, SUBGRAPH and ID in DotTypes.
+  generate=[element-case="as-is" java="11"]
+
+  elementTypeHolderClass="io.github.acalebratliff.dotstudio.lang.psi.DotTypes"
+  elementTypeClass="io.github.acalebratliff.dotstudio.lang.psi.DotElementType"
+  tokenTypeClass="io.github.acalebratliff.dotstudio.lang.psi.DotTokenType"
+  psiClassPrefix="Dot"
+  psiImplClassSuffix="Impl"
+  psiPackage="io.github.acalebratliff.dotstudio.lang.psi"
+  psiImplPackage="io.github.acalebratliff.dotstudio.lang.psi.impl"
+
+  // A token's debug name is its text where it has one, so parser errors read "'{' expected" rather than "LBRACE expected".
+  tokens=[
+    STRICT='strict'
+    GRAPH='graph'
+    DIGRAPH='digraph'
+    SUBGRAPH='subgraph'
+    NODE='node'
+    EDGE='edge'
+    ID
+    NUMERAL
+    QUOTED_STRING
+    HTML_STRING
+    // The grammar never refers to comments, and Grammar-Kit generates an unreferenced token only if it has a value.
+    // Dot.flex is the lexer; these patterns only mirror it.
+    LINE_COMMENT='regexp:(//|#)[^\r\n]*'
+    BLOCK_COMMENT='regexp:/\*([^*]|\*+[^*/])*\*+/'
+    EDGEOP_DIRECTED='->'
+    EDGEOP_UNDIRECTED='--'
+    SEMICOLON=';'
+    COMMA=','
+    EQ='='
+    COLON=':'
+    PLUS='+'
+    LBRACKET='['
+    RBRACKET=']'
+    LBRACE='{'
+    RBRACE='}'
+  ]
+}
+
+// grammar.y parses one graph per call and Graphviz reads graphs from a file until it runs out, so a file holds any number.
+private dot_file ::= file_entry*
+private file_entry ::= !<<eof>> graph {pin=1 recoverWhile=file_entry_recover}
+private file_entry_recover ::= !(STRICT | GRAPH | DIGRAPH)
+
+// STRICT has its own alternative so that it pins: a `strict` that consumed nothing would stop file_entry recovery in
+// front of it.
+graph ::= (STRICT (GRAPH | DIGRAPH) | GRAPH | DIGRAPH) id? body {pin(".*")=1}
+// grammar.y's name. As a separate rule a missing '{' fails it as a whole, so a broken header doesn't take in what follows.
+private body ::= '{' stmt_list '}' {pin=1}
+
+stmt_list ::= stmt_entry*
+// Statements need no separator, so recovery stops at anything that can start the next one. `strict` and `digraph`
+// can only start a graph, so they end stmt_list: a missing '}' doesn't pull the next graph in.
+private stmt_entry ::= !('}' | <<eof>> | STRICT | DIGRAPH) stmt ';'? {pin=1 recoverWhile=stmt_entry_recover}
+private stmt_entry_recover ::= !('}' | STRICT | DIGRAPH | stmt_start)
+private stmt_start ::= id_start | GRAPH | NODE | EDGE | SUBGRAPH | '{'
+
+// grammar.y's `simple` operand is a comma-separated node list or one subgraph, for node and edge statements alike.
+// Statements that start with a node list try edge_stmt first and back off to node_stmt, which reparses only the list.
+// A subgraph operand is parsed once and wrapped by left rules: reparsing it would be exponential in nesting depth.
+private stmt ::= attr_stmt | attr_assignment | edge_stmt | node_stmt | subgraph (subgraph_edge_stmt | subgraph_node_stmt)?
+
+// grammar.y also accepts a macro name, `node m = [...]`; Graphviz warns that macros aren't implemented and applies the list.
+attr_stmt ::= (GRAPH | NODE | EDGE) (id '=')? attr_list+ {pin=1}
+attr_list ::= '[' a_list? ']' {pin=1}
+a_list ::= a_list_entry+
+// a_list ends at anything that can't continue it, so an unclosed '[' stops at the next statement with one "']' expected"
+// instead of taking the statement in.
+private a_list_entry ::= !a_list_end attr_assignment (';' | ',')? {pin=1 recoverWhile=a_list_entry_recover}
+private a_list_end ::= ']' | '}' | '{' | GRAPH | NODE | EDGE | SUBGRAPH | STRICT | DIGRAPH | edgeop | <<eof>> | id !'='
+private a_list_entry_recover ::= !(a_list_end | id '=')
+// The spec leaves `ID '=' ID` unnamed, both as a statement and inside a_list; grammar.y calls it attrassignment.
+attr_assignment ::= id '=' id {pin=2}
+
+edge_stmt ::= node_list edgeRHS attr_list*
+left subgraph_edge_stmt ::= edgeRHS attr_list* {elementType=edge_stmt}
+edgeRHS ::= (edgeop (node_list | subgraph))+ {pin(".*")=1}
+private edgeop ::= '->' | '--'
+
+node_stmt ::= node_list attr_list*
+// grammar.y gives a lone subgraph an attribute list too.
+left subgraph_node_stmt ::= attr_list+ {elementType=node_stmt}
+private node_list ::= node_id (',' node_id)* {pin(".*")=1}
+
+node_id ::= id port?
+// grammar.y accepts any ID after either colon. Whether a lone `:n` is a port or a compass point depends on the node's
+// shape, so it parses as a port ID.
+port ::= ':' id (':' compass_pt)? {pin=1}
+compass_pt ::= id
+
+// SUBGRAPH pins: a failed statement that consumed nothing would end stmt_list early.
+subgraph ::= SUBGRAPH id? body | body {pin(".*")=1}
+
+// grammar.y's qatom: scan.l returns quoted and HTML strings alike as T_qatom, and either concatenates with '+'.
+id ::= ID | NUMERAL | qatom ('+' qatom)* {pin(".*")=1}
+private qatom ::= QUOTED_STRING | HTML_STRING
+private id_start ::= ID | NUMERAL | HTML_STRING | QUOTED_STRING

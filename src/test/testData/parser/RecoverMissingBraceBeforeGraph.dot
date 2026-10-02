@@ -1,0 +1,4 @@
+digraph first {
+    a -> b
+digraph second { c }
+strict graph third { d }

@@ -1,0 +1,4 @@
+digraph {
+    a [color= , shape=box,, label="x" =]
+    b
+}

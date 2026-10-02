@@ -1,0 +1,13 @@
+DOT file(0,19)
+  DotGraphImpl(graph)(0,19)
+    PsiElement(strict)('strict')(0,6)
+    PsiWhiteSpace(' ')(6,7)
+    PsiElement(digraph)('digraph')(7,14)
+    PsiWhiteSpace(' ')(14,15)
+    DotIdImpl(id)(15,16)
+      PsiElement(ID)('G')(15,16)
+    PsiWhiteSpace(' ')(16,17)
+    PsiElement({)('{')(17,18)
+    DotStmtListImpl(stmt_list)(18,18)
+      <empty list>
+    PsiElement(})('}')(18,19)

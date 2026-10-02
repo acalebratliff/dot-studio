@@ -1,0 +1,4 @@
+digraph {
+    a; b [color=red]; 1.5; "quoted"; <<b>html</b>>
+    c d
+}

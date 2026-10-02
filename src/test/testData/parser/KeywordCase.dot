@@ -1,0 +1,7 @@
+STRICT DiGraph {
+    Node [shape=box]
+    EDGE [color=red]
+    GRAPH [rankdir=LR]
+    SubGraph s { a }
+}
+Graph {}

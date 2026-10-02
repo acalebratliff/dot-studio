@@ -1,0 +1,4 @@
+digraph {
+    subgraph s { a } [color=red]
+    { b } [color=blue][style=bold]
+}

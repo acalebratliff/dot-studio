@@ -1,0 +1,5 @@
+digraph {
+    graph [rankdir=LR]
+    node [shape=box][color=red]
+    edge []
+}

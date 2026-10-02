@@ -1,0 +1,2 @@
+digraph { a [label="ends with a backslash\\"] b [label=""] }
+digraph { c [label=<<b>bold</b>>] /* closed */ }

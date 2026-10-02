@@ -1,0 +1,3 @@
+graph { a <error descr="An undirected graph uses -- for edges">-></error> b -- c }
+digraph { a <error descr="A digraph uses -> for edges">--</error> b -> c }
+graph { subgraph { a <error descr="An undirected graph uses -- for edges">-></error> b } }

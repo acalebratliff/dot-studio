@@ -5,7 +5,7 @@ import com.intellij.psi.tree.IElementType;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
-import static io.github.acalebratliff.dotstudio.lang.DotTokenTypes.*;
+import static io.github.acalebratliff.dotstudio.lang.psi.DotTypes.*;
 
 // Lexical rules follow https://graphviz.org/doc/info/lang.html.
 // Every token is returned in YYINITIAL, so the lexer can restart at any token boundary.
