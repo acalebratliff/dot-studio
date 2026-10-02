@@ -44,7 +44,7 @@ Key words: **MUST** means a PR is rejected without it. **SHOULD** means a deviat
 - Long-running work (renders) MUST be cancelled when the owning disposable is disposed.
 
 ### 1.5 plugin.xml and API status
-- **MUST register every extension in `plugin.xml`.** Dependencies are `<depends>com.intellij.modules.platform</depends>` plus exactly one optional dependency, `<depends optional="true" config-file="…">com.intellij.modules.jcef</depends>`, which holds all JCEF registrations. The spike confirmed the preview loads through this dependency on both 252 and 262; every preview PR re-proves it with `runIde` on 252. From 2026.2 (262) JCEF is a separate bundled plugin, and without this dependency the plugin throws `NoClassDefFoundError: JBCefApp` (preview spike, 2026-10-02). Actions and settings take their text from the resource bundle. https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html
+- **MUST register every extension in `plugin.xml`.** Dependencies are `<depends>com.intellij.modules.platform</depends>` plus exactly one optional dependency, `<depends optional="true" config-file="…">com.intellij.modules.jcef</depends>`, which exists only to put JCEF classes on the plugin's classpath on 2026.2+. `config-file` is mandatory on an optional dependency, so that file exists but **stays empty of registrations on purpose** (a comment in it says why). An optional dependency on a module that 252 lacks must not fail loading or verification: the first PR that adds it shows a green 252 Plugin Verifier run. From 2026.2 (262) JCEF is a separate bundled plugin, and without this dependency the plugin throws `NoClassDefFoundError: JBCefApp` (preview spike, 2026-10-02). **2025.2 (252) has no `com.intellij.modules.jcef` module, so the optional config file never loads there.** Therefore preview registrations (such as the split-editor provider) MUST go in the main `plugin.xml`, never in the optional config file. Every preview PR proves the preview with `runIde` on 252, on 262, and on 262 with the JCEF plugin disabled. Actions and settings take their text from the resource bundle. https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html
 - **The plugin `<id>` cannot be changed after the first public upload** (same page). The Product Owner confirms it before the first upload (see DECISIONS.md).
 - **MUST NOT use APIs marked `@ApiStatus.Internal`, `@ApiStatus.Experimental`, `@ApiStatus.ScheduledForRemoval`, `@ApiStatus.Obsolete` or `@Deprecated`.** Do not call `@OverrideOnly` methods or extend `@NonExtendable` types. https://plugins.jetbrains.com/docs/intellij/verifying-plugin-compatibility.html. Plugin Verifier enforces this (4.4). If no alternative exists, the PR MUST say so and link the API.
 - `sinceBuild` = 252 (2025.2). `untilBuild` is closed at the highest branch Plugin Verifier has passed (`<branch>.*`). JetBrains warns that an open range "will include all future builds". https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html. Raising `untilBuild` is its own PR, with a green verifier run attached.
@@ -60,7 +60,7 @@ Key words: **MUST** means a PR is rejected without it. **SHOULD** means a deviat
 - Names come from the DOT spec (https://graphviz.org/doc/info/lang.html): `graph`, `digraph`, `subgraph`, `node_stmt`, `edge_stmt`, `attr_stmt`, `a_list`, `ID`, `edgeop`, `compass_pt`. PSI types and grammar rules use these names. Do not invent synonyms ("connection" for edge).
 
 ### 1.7 JCEF preview
-- **MUST check `JBCefApp.isSupported()` before touching any JCEF class.** If it returns false, use the non-JCEF fallback (a static rendered image plus an explanatory notice). https://plugins.jetbrains.com/docs/intellij/embedded-browser-jcef.html
+- **MUST check JCEF availability before touching any JCEF class,** using a check that does not itself reference JCEF types. First confirm the JCEF classes are loadable through the plugin's classloader. Catch only `ClassNotFoundException`/`LinkageError`, because on 262 the JCEF plugin can be disabled. Then call `JBCefApp.isSupported()`. Only code that runs after both checks pass may reference JCEF classes. If either fails, show the fallback: an explanatory notice. Nothing can render DOT without JCEF, so there is no image fallback. https://plugins.jetbrains.com/docs/intellij/embedded-browser-jcef.html
 - **MUST register `JBCefBrowser` and every `JBCefJSQuery` with the split editor's disposable.** Both are `JBCefDisposable`. (same page)
 - **MUST load the page, viz-js and the wasm from plugin resources only.** Serve them with a `CefRequestHandler`/`CefResourceRequestHandler` mapped to a fixed internal origin, as the page's `JCefImageViewer` reference does. (same page)
   - No remote URLs, no CDN, no `file://` paths into the user's filesystem.
@@ -220,7 +220,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
     - preserving copyright notices;
     - stating where the corresponding source is available. A link to the exact Graphviz 16.1.0 source tarball and to the viz-js tag satisfies this.
   - libexpat is MIT and needs its notice.
-- **Where the licences ship:** inside the plugin distribution under `META-INF/third-party/` (`viz-js-LICENSE`, `graphviz-EPL-2.0.txt`, `expat-COPYING`, and a `NOTICE` listing component, version, licence and source URL). The same list goes in the README.
+- **Where the licences ship:** inside the plugin distribution under `META-INF/third-party/` (`viz-js-LICENSE`, `graphviz-EPL-2.0.txt`, `graphviz-embedded-notices.txt`, `expat-COPYING`, `emscripten-LICENSE`, `musl-COPYRIGHT`, and a `NOTICE` listing component, version, licence and source URL, plus the libc++/libc++abi note). **Licence notices cover everything compiled into a bundled binary, not just the named library.** That includes per-file notices inside the library's sources and toolchain runtimes, such as the Emscripten runtime, musl libc and libc++. The same list goes in the README.
   - Verify the expat and Graphviz licence texts against the actual 16.1.0 and 2.8.5 tarballs when bundling. This was not done for this draft.
 - **Our own licence:** the repo's licence must be compatible with shipping EPL-2.0 object code alongside it. Decided: Apache-2.0 (DECISIONS.md).
 
@@ -264,7 +264,7 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
 11. **No invented APIs.** Every platform API used must exist in the 2025.2 SDK and pass the verifier. When a PR uses an unfamiliar API, its description links the SDK doc or source.
 12. **No unverified claims** in README, listing, changelog or commit messages ("fast", "robust", "production-ready"). Performance statements carry a measured number and how it was measured.
 13. **No suppressions without a reason.** `@Suppress`, ktlint disables and baseline entries each carry a comment explaining why the rule is wrong *here*.
-14. **No hardcoded user-visible strings** (1.8). A CI check flags string literals passed to these calls in `src/main`: `Messages\.show\w*\([^)]*"`, `Notification\([^)]*"`, `text\s*=\s*"`, `label\("`, `button\("`.
+14. **No hardcoded user-visible strings** (1.8). A CI check (`.github/scripts/check-standards.sh`) flags a string literal passed *directly* as an argument to `Messages.show*(…)` or `Notification(…)`, and also flags `text = "…"` anywhere on a line, `label("…")` and `button("…")`, in `src/main`. Non-UI identifiers passed to these calls (for example a notification group ID) MUST be named constants, not literals, so they aren't flagged. Literals nested inside a bundle call, such as `DotStudioBundle.message("key")`, are allowed. Known limits: the check is line-based, and it misses arguments nested two parentheses deep (#2).
    - Every grep-based check MUST fail closed (a grep error fails the job).
    - Every grep-based check MUST be proven in CI by a bad sample it catches.
 15. **Consistency over novelty.** A new pattern (a new concurrency primitive, a new way to talk to JCEF) needs a PR that introduces it alone, with the reason.
@@ -280,10 +280,10 @@ Source: https://github.com/JetBrains/intellij-platform-plugin-template, read 202
 - [ ] No static mutable state; no Kotlin `object` extensions; services not cached in fields
 - [ ] No Internal/Experimental/Deprecated/ScheduledForRemoval API (verifier clean)
 - [ ] User-visible strings in DotStudioBundle; no string concatenation of sentences
-- [ ] JCEF: isSupported() guarded; local resources only; DOT passed as data, not code
+- [ ] JCEF: availability check (class-loadable, then isSupported(), no JCEF types in the check); local resources only; DOT passed as data, not code
 - [ ] No PCE/CancellationException swallowed; no catch-all; Logger used, LOG.error only for bugs
 - [ ] No new dependency, or dependency justified (purpose, licence, size); actions SHA-pinned
 - [ ] No comments restating code; no dead/speculative code; TODOs link an issue
 - [ ] Names from DOT spec; visibility internal/private unless required
-- [ ] If preview/UI touched: checked in runIde on 2025.2 and latest, light + dark theme, JCEF-off fallback
+- [ ] If preview/UI touched: checked in runIde on 2025.2 and latest, light + dark theme, fallback notice for both JCEF unsupported and 262 with the JCEF plugin disabled
 ```
