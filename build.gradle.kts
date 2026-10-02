@@ -2,6 +2,8 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jmailen.gradle.kotlinter.tasks.FormatTask
+import org.jmailen.gradle.kotlinter.tasks.LintTask
 import java.security.MessageDigest
 import java.util.HexFormat
 
@@ -61,6 +63,37 @@ intellijPlatform {
         failureLevel = VerifyPluginTask.FailureLevel.ALL
     }
 }
+
+tasks.verifyPlugin {
+    // The Plugin Verifier keeps extracted-plugins/ in a home dir that defaults to ~/.pluginVerifier, shared by every
+    // checkout on the machine, so concurrent runs from two worktrees corrupt each other. Give each checkout its own.
+    val verifierHome = layout.buildDirectory.dir("pluginVerifierHome").get().asFile
+    systemProperty("plugin.verifier.home.dir", verifierHome.absolutePath)
+}
+
+tasks.test {
+    // Tests read their fixtures from src/test/testData by relative path, so Gradle must treat them as inputs.
+    inputs.dir("src/test/testData").withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("testData")
+}
+
+// kotlinter only lints source sets, so the build scripts get tasks of their own, wired into lintKotlin and formatKotlin.
+val buildScripts = layout.projectDirectory.asFileTree.matching { include("*.gradle.kts") }
+
+val lintKotlinScripts = tasks.register<LintTask>("lintKotlinScripts") {
+    group = "verification"
+    description = "Runs lint on the Gradle Kotlin scripts."
+    source(buildScripts)
+    reports = mapOf("plain" to layout.buildDirectory.file("reports/ktlint/scripts.txt").get().asFile)
+}
+
+val formatKotlinScripts = tasks.register<FormatTask>("formatKotlinScripts") {
+    group = "formatting"
+    description = "Formats the Gradle Kotlin scripts."
+    source(buildScripts)
+}
+
+tasks.configureEach { if (name == "lintKotlin") dependsOn(lintKotlinScripts) }
+tasks.configureEach { if (name == "formatKotlin") dependsOn(formatKotlinScripts) }
 
 tasks.generateLexer {
     sourceFile = layout.projectDirectory.file("src/main/grammars/Dot.flex")
