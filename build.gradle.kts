@@ -62,6 +62,13 @@ intellijPlatform {
     }
 }
 
+tasks.verifyPlugin {
+    // The Plugin Verifier keeps extracted-plugins/ in a home dir that defaults to ~/.pluginVerifier, shared by every
+    // checkout on the machine, so concurrent runs from two worktrees corrupt each other. Give each checkout its own.
+    val verifierHome = layout.buildDirectory.dir("pluginVerifierHome").get().asFile
+    systemProperty("plugin.verifier.home.dir", verifierHome.absolutePath)
+}
+
 tasks.generateLexer {
     sourceFile = layout.projectDirectory.file("src/main/grammars/Dot.flex")
 }
