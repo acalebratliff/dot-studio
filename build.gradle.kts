@@ -87,6 +87,11 @@ tasks.processResources {
     }
 }
 
+tasks.test {
+    // Tests must never start a real JCEF browser (CODING-STANDARDS 1.7); with JCEF off the preview shows its notice.
+    systemProperty("ide.browser.jcef.enabled", "false")
+}
+
 tasks.check {
     dependsOn("verifyVizJsChecksums")
 }

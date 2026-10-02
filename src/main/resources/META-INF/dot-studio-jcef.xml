@@ -1,0 +1,7 @@
+<!--
+  Loaded only where the optional com.intellij.modules.jcef dependency resolves (2026.2+, where JCEF is a separate
+  plugin). The dependency exists to put JCEF classes on our class path there. 2025.2 has no such module, so this
+  file never loads on it: preview registrations go in plugin.xml, and this file stays empty.
+-->
+<idea-plugin>
+</idea-plugin>
