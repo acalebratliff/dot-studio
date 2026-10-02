@@ -1,0 +1,2 @@
+# Vendored files are checked byte-for-byte against recorded SHA-256s; line-ending conversion would break them.
+third_party/viz-js/dist/** -text -diff
