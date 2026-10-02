@@ -15,9 +15,12 @@ import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
 import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.DotRenderer
+import io.github.acalebratliff.dotstudio.preview.PngResult
 import io.github.acalebratliff.dotstudio.preview.PreviewState
 import io.github.acalebratliff.dotstudio.preview.RenderResult
 import io.github.acalebratliff.dotstudio.preview.currentPreviewTheme
+import io.github.acalebratliff.dotstudio.preview.pngFailure
+import io.github.acalebratliff.dotstudio.preview.pngResult
 import io.github.acalebratliff.dotstudio.preview.previewThemeScript
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +56,17 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     @Volatile private var themeScript = previewThemeScript(currentPreviewTheme())
     private val root = JPanel(BorderLayout()).apply { add(browser.component) }
     private val pendingRenders = ConcurrentHashMap<Long, CompletableDeferred<RenderResult>>()
-    private val nextRenderId = AtomicLong()
+    private val pendingPngs = ConcurrentHashMap<Long, CompletableDeferred<PageReply.PngReply>>()
+
+    // Read by the request handler on a CEF IO thread when the page loads export-<id>.svg.
+    private val exportSvgs = ConcurrentHashMap<Long, String>()
+
+    // Render and export requests share one sequence, so a reply's id names exactly one request.
+    private val nextRequestId = AtomicLong()
+
+    /** The SVG of the graph on show, or null when the last render failed or nothing has rendered yet. */
+    @Volatile var renderedSvg: String? = null
+        private set
 
     val component: JComponent get() = root
 
@@ -62,15 +75,14 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
         Disposer.register(parent, replyQuery)
         // Runs on a CEF thread, so it only completes a deferred that a coroutine is waiting on.
         replyQuery.addHandler { payload ->
-            val reply = parseRenderReply(payload)
-            if (reply == null) {
-                LOG.warn("Ignoring a malformed reply from the preview page")
-            } else {
-                pendingRenders[reply.id]?.complete(reply.result)
+            when (val reply = parsePageReply(payload)) {
+                null -> LOG.warn("Ignoring a malformed reply from the preview page")
+                is PageReply.Render -> pendingRenders[reply.id]?.complete(reply.result)
+                is PageReply.PngReply -> pendingPngs[reply.id]?.complete(reply)
             }
             null
         }
-        browser.jbCefClient.addRequestHandler(PreviewRequestHandler(), browser.cefBrowser)
+        browser.jbCefClient.addRequestHandler(PreviewRequestHandler { id -> exportSvgs[id] }, browser.cefBrowser)
         browser.jbCefClient.addLoadHandler(
             object : CefLoadHandlerAdapter() {
                 override fun onLoadEnd(cefBrowser: CefBrowser, frame: CefFrame, httpStatusCode: Int) {
@@ -127,7 +139,7 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     override suspend fun render(dot: String): RenderResult {
         pageLoad.await()
         pageFailure?.let { return RenderResult.EngineFailure(it) }
-        val id = nextRenderId.incrementAndGet()
+        val id = nextRequestId.incrementAndGet()
         val reply = CompletableDeferred<RenderResult>()
         pendingRenders[id] = reply
         try {
@@ -140,7 +152,36 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
         }
     }
 
+    /**
+     * Rasterises [svg] at [scale] in the page, so the PNG looks exactly like the preview. Cancelling the caller
+     * abandons the request.
+     */
+    suspend fun rasterisePng(svg: String, scale: Int): PngResult {
+        pageLoad.await()
+        pageFailure?.let { return PngResult.Failed(DotStudioBundle.message("preview.error.page", it)) }
+        val id = nextRequestId.incrementAndGet()
+        val reply = CompletableDeferred<PageReply.PngReply>()
+        exportSvgs[id] = svg
+        pendingPngs[id] = reply
+        try {
+            execute("dotStudio.rasterise($id, $scale)")
+            // Decoded here rather than in the reply handler, which runs on a CEF thread.
+            return when (val answer = reply.await()) {
+                is PageReply.Png -> pngResult(answer.base64)
+                is PageReply.PngFailed -> pngFailure(answer.code, answer.detail, scale)
+            }
+        } finally {
+            pendingPngs.remove(id)
+            exportSvgs.remove(id)
+        }
+    }
+
     suspend fun show(state: PreviewState) {
+        when (state) {
+            PreviewState.Rendering -> Unit
+            is PreviewState.Rendered -> renderedSvg = state.svg
+            is PreviewState.Failed -> renderedSvg = null
+        }
         if (pageLoad.isCompleted && pageFailure == null) {
             if (noticeShown) withContext(Dispatchers.EDT) { setContent(browser.component, notice = false) }
             execute(
