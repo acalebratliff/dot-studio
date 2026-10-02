@@ -1,0 +1,11 @@
+// line comment
+a // trailing
+/* block */ b /* multi
+line */
+/**/ /***/ /* ** */
+# 1 "file.dot"
+#preprocessor
+    # indented
+a # mid-line
+c
+/* unterminated

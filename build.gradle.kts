@@ -9,6 +9,7 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm")
     id("org.jetbrains.intellij.platform")
+    id("org.jetbrains.intellij.platform.grammarkit")
     id("org.jetbrains.changelog")
     id("org.jmailen.kotlinter")
 }
@@ -20,6 +21,12 @@ kotlin {
         apiVersion = KotlinVersion.KOTLIN_2_1
         languageVersion = KotlinVersion.KOTLIN_2_1
         allWarningsAsErrors = true
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDir(tasks.generateLexer.map { it.targetRootOutputDir.get() })
     }
 }
 
@@ -52,6 +59,10 @@ intellijPlatform {
         }
         failureLevel = VerifyPluginTask.FailureLevel.ALL
     }
+}
+
+tasks.generateLexer {
+    sourceFile = layout.projectDirectory.file("src/main/grammars/Dot.flex")
 }
 
 tasks.register<VerifyVendoredChecksums>("verifyVizJsChecksums") {

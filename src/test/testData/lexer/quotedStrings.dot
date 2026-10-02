@@ -1,0 +1,7 @@
+"plain" "" "with \"escaped\" quotes"
+"back\\slash" "other \n escape"
+"line \
+continued" "raw
+newline"
+"a" + "b"
+"unterminated

@@ -1,0 +1,9 @@
+/* Every highlighter attribute */
+strict digraph g {
+    // line comment
+    a -> b -- c;
+    a [label=<<b>x</b>>, w=1.5];
+    b:n = "q" + "r";
+}
+# 1 "preprocessor line"
+@
