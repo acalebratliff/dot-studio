@@ -31,6 +31,9 @@ The plugin bundles one file, `preview/viz-js/viz-global.js` (1,329,882 bytes), t
 | viz-js (`@viz-js/viz`) | 3.31.0 | MIT | https://github.com/mdaines/viz-js/tree/release-viz-3.31.0 |
 | Graphviz (compiled to WebAssembly inside viz-js) | 16.1.0 | EPL-2.0 | https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/16.1.0/graphviz-16.1.0.tar.gz |
 | Expat (compiled to WebAssembly inside viz-js) | 2.8.5 | MIT | https://github.com/libexpat/libexpat/releases/download/R_2_8_5/expat-2.8.5.tar.gz |
+| Emscripten runtime (compiled into viz-js) | 6.0.10 | MIT or NCSA | https://github.com/emscripten-core/emscripten/tree/6.0.10 |
+| musl libc (compiled into viz-js, via Emscripten) | Emscripten 6.0.10 copy | MIT | https://github.com/emscripten-core/emscripten/tree/6.0.10/system/lib/libc/musl |
+| libc++, libc++abi (compiled into viz-js, via Emscripten) | Emscripten 6.0.10 copy | Apache-2.0 WITH LLVM-exception | https://github.com/emscripten-core/emscripten/tree/6.0.10/system/lib/libcxx |
 
 ## Contributing
 

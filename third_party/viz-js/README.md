@@ -9,7 +9,7 @@
 | npm tarball | https://registry.npmjs.org/@viz-js/viz/-/viz-3.31.0.tgz |
 | Registry `integrity` | `sha512-r7zlQdRvcwvIpjHGgs+KNWHeE/P5/Dq7k8ZAKaMCbZqomxCBJV78gVuQYaHzFVca+kB0mX0fMW9UFevCOBG50A==` |
 | Git tag | [`release-viz-3.31.0`](https://github.com/mdaines/viz-js/tree/release-viz-3.31.0) (commit `c8ce050d28eb0dc1ed1629ea32ab7f3dc117db0f`) |
-| Licence | MIT; the bundled Graphviz 16.1.0 is EPL-2.0 and Expat 2.8.5 is MIT. Texts and source links: `src/main/resources/META-INF/third-party/` |
+| Licence | MIT; the bundled Graphviz 16.1.0 is EPL-2.0, Expat 2.8.5 is MIT, and the Emscripten 6.0.10 runtime is MIT/NCSA with musl (MIT) and libc++ (Apache-2.0 WITH LLVM-exception). Texts and source links: `src/main/resources/META-INF/third-party/` |
 
 The tarball was downloaded on 2026-10-02 and its sha512 matched the registry `integrity` above. Files were copied out of it unmodified.
 
@@ -34,5 +34,5 @@ The `verifyVizJsChecksums` task (part of `check`, and run before `processResourc
 ## Updating
 
 1. Download the new tarball and check its sha512 against `npm view @viz-js/viz@<version> dist.integrity`.
-2. Read `packages/viz/backend/Dockerfile` at the new tag for the Graphviz and Expat versions. Update `META-INF/third-party/` (NOTICE, licence texts, embedded notices) from those source tarballs.
+2. Read `packages/viz/backend/Dockerfile` at the new tag for the Graphviz, Expat and emsdk versions. Update `META-INF/third-party/` (NOTICE, licence texts, embedded notices) from those source tarballs.
 3. Copy the files, then update this README's version, URLs, `integrity` and hash table. `./gradlew check` must pass.

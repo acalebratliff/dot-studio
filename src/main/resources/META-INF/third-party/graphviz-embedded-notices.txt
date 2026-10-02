@@ -4,16 +4,19 @@ Graphviz as a whole is distributed under EPL-2.0 (graphviz-EPL-2.0.txt). The
 files below belong to libraries that the viz-js 3.31.0 build links
 (packages/viz/backend/Dockerfile at tag release-viz-3.31.0) and carry their own
 copyright notices and licence terms. Some may be left out by Graphviz's
-configure options; their notices are included regardless. Copied from the
-Graphviz 16.1.0 source tarball (see NOTICE for its URL and SHA-256), with
-trailing whitespace removed.
+configure options; their notices are included regardless. Each excerpt is
+copied from the Graphviz 16.1.0 source tarball (see NOTICE for its URL and
+SHA-256), with trailing whitespace removed. The only text that is not a copy
+is the ColorBrewer acknowledgment, marked below.
 
 ================================================================================
 lib/common/brewer_colors (colour scheme tables compiled into lib/common)
 ================================================================================
+[DOT Studio's acknowledgment, required by clause 2 of the licence below:]
 This product includes color specifications and designs developed by Cynthia
 Brewer (http://colorbrewer.org/).
 
+[Copied from lib/common/brewer_colors:]
 # Apache-Style Software License for ColorBrewer software and ColorBrewer
 # Color Schemes, Version 1.1
 #
@@ -147,7 +150,8 @@ plugin/core/gvrender_core_pov.c (POV-Ray renderer in the core plugin)
 **********************************************************/
 
 ================================================================================
-lib/vpsc/*, lib/neatogen/quad_prog_vpsc.c (constraint solver)
+lib/vpsc/*, lib/neatogen/quad_prog_vpsc.c,
+lib/neatogen/constrained_majorization_ipsep.c (constraint solver)
 ================================================================================
  * Authors:
  *   Tim Dwyer <tgdwyer@gmail.com>

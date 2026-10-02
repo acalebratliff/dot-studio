@@ -2,7 +2,9 @@ DOT Studio is licensed under the Apache License 2.0.
 
 This plugin bundles the following third-party software. Each component is
 distributed unmodified, under its own licence, in the file
-preview/viz-js/viz-global.js inside the plugin jar.
+preview/viz-js/viz-global.js inside the plugin jar. Graphviz, Expat and the
+Emscripten runtime libraries below are in it in object form (WebAssembly and
+generated JavaScript), built with emsdk 6.0.10.
 
 --------------------------------------------------------------------------------
 viz-js (@viz-js/viz) 3.31.0
@@ -35,3 +37,27 @@ Copyright (c) 2001-2025 Expat maintainers
 Licence: MIT, see expat-COPYING
 Source: https://github.com/libexpat/libexpat/releases/download/R_2_8_5/expat-2.8.5.tar.gz
         SHA-256 920dde485e15eda0cce8d2310b41d492c534e5e3d89ad407a0b4176dd2ff88fe
+
+--------------------------------------------------------------------------------
+Emscripten 6.0.10 (JavaScript runtime and system libraries, object form)
+--------------------------------------------------------------------------------
+Copyright (c) 2010-2014 Emscripten authors
+Licence: MIT or University of Illinois/NCSA Open Source License (dual), see
+         emscripten-LICENSE
+Source: https://github.com/emscripten-core/emscripten/tree/6.0.10
+        (tag 6.0.10, commit d6c521a7f05449857c76bd99e396895583cf2083; the
+        emscripten revision pinned by emsdk 6.0.10, which the viz-js build
+        image emscripten/emsdk:6.0.10 uses)
+
+--------------------------------------------------------------------------------
+musl libc (as bundled in Emscripten 6.0.10, object form)
+--------------------------------------------------------------------------------
+Copyright (c) 2005-2020 Rich Felker, et al.
+Licence: MIT, see musl-COPYRIGHT
+Source: https://github.com/emscripten-core/emscripten/tree/6.0.10/system/lib/libc/musl
+
+--------------------------------------------------------------------------------
+libc++ and libc++abi (LLVM, as bundled in Emscripten 6.0.10, object form)
+--------------------------------------------------------------------------------
+Licence: Apache-2.0 WITH LLVM-exception, which does not require this notice for
+object code. Source: https://github.com/emscripten-core/emscripten/tree/6.0.10/system/lib/libcxx
