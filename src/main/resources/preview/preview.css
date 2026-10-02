@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    font: 13px system-ui, sans-serif;
+}
+
+#message {
+    padding: 8px 12px;
+    white-space: pre-wrap;
+    background: #fdecea;
+    color: #611a15;
+}
+
+#graph {
+    padding: 8px;
+}
+
+.rendering #graph {
+    opacity: 0.6;
+}

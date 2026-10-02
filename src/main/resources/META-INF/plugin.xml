@@ -16,6 +16,10 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+    <!-- From 2026.2 JCEF is a separate plugin, and this dependency puts its classes on our class path. 2025.2 has
+         JCEF in the core and no such module, so the config file never loads there: preview registrations belong
+         in this file, not in dot-studio-jcef.xml. -->
+    <depends optional="true" config-file="dot-studio-jcef.xml">com.intellij.modules.jcef</depends>
 
     <resource-bundle>messages.DotStudioBundle</resource-bundle>
 
