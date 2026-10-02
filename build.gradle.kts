@@ -69,6 +69,11 @@ tasks.verifyPlugin {
     systemProperty("plugin.verifier.home.dir", verifierHome.absolutePath)
 }
 
+tasks.test {
+    // Tests read their fixtures from src/test/testData by relative path, so Gradle must treat them as inputs.
+    inputs.dir("src/test/testData").withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("testData")
+}
+
 tasks.generateLexer {
     sourceFile = layout.projectDirectory.file("src/main/grammars/Dot.flex")
 }
