@@ -1,0 +1,15 @@
+- [ ] One concern; <~400 lines excl. test data (or reason given)
+- [ ] Conventional Commit title; CHANGELOG [Unreleased] updated if user-visible
+- [ ] CI green: lintKotlin, check (tests), verifyPlugin (all failure levels), buildPlugin
+- [ ] Behaviour change → test that fails without it; new/changed testData .txt diffs read
+- [ ] Nothing heavy on EDT; reads in readAction, writes in writeAction on EDT; coroutines from injected scope
+- [ ] Every Disposable/listener/JBCefJSQuery has a non-Application/Project parent
+- [ ] No static mutable state; no Kotlin `object` extensions; services not cached in fields
+- [ ] No Internal/Experimental/Deprecated/ScheduledForRemoval API (verifier clean)
+- [ ] User-visible strings in DotStudioBundle; no string concatenation of sentences
+- [ ] JCEF: isSupported() guarded; local resources only; DOT passed as data, not code
+- [ ] No PCE/CancellationException swallowed; no catch-all; Logger used, LOG.error only for bugs
+- [ ] No new dependency, or dependency justified (purpose, licence, size); actions SHA-pinned
+- [ ] No comments restating code; no dead/speculative code; TODOs link an issue
+- [ ] Names from DOT spec; visibility internal/private unless required
+- [ ] If preview/UI touched: checked in runIde on 2025.2 and latest, light + dark theme, JCEF-off fallback
