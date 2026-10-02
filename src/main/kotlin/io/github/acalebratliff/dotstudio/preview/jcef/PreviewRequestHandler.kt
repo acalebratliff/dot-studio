@@ -24,13 +24,16 @@ private const val CSP = "default-src 'none'; script-src $PREVIEW_ORIGIN 'wasm-un
     "worker-src $PREVIEW_ORIGIN; style-src $PREVIEW_ORIGIN; img-src $PREVIEW_ORIGIN; connect-src $PREVIEW_ORIGIN; " +
     "base-uri 'none'; form-action 'none'"
 private val RESOURCE_PATH = Regex("""[a-z0-9-]+(/[a-z0-9-]+)*\.(html|js|css)""")
+private val EXPORT_PATH = Regex("""export-([0-9]+)\.svg""")
 
 /**
  * Serves the preview page from plugin resources at [PREVIEW_ORIGIN] and blocks everything else. The frame may only
  * ever show [PAGE_URL]: a link in the graph, even to another path on our origin, would strand later renders.
+ * `export-<id>.svg` serves [exportSvg] for that id, so the page can draw it on a canvas without a `blob:` or `data:`
+ * image source, which the CSP does not allow. Runs on a CEF IO thread.
  */
-internal class PreviewRequestHandler : CefRequestHandlerAdapter() {
-    private val resourceRequestHandler = ResourceRequestHandler()
+internal class PreviewRequestHandler(exportSvg: (Long) -> String?) : CefRequestHandlerAdapter() {
+    private val resourceRequestHandler = ResourceRequestHandler(exportSvg)
 
     override fun onBeforeBrowse(
         browser: CefBrowser?,
@@ -59,27 +62,45 @@ internal class PreviewRequestHandler : CefRequestHandlerAdapter() {
     }
 }
 
-private class ResourceRequestHandler : CefResourceRequestHandlerAdapter() {
+private class ResourceRequestHandler(private val exportSvg: (Long) -> String?) : CefResourceRequestHandlerAdapter() {
     override fun onBeforeResourceLoad(browser: CefBrowser?, frame: CefFrame?, request: CefRequest): Boolean =
         !isOwnUrl(request.url)
 
-    override fun getResourceHandler(browser: CefBrowser?, frame: CefFrame?, request: CefRequest): CefResourceHandler =
-        ResourceHandler(request.url.removePrefix("$PREVIEW_ORIGIN/").substringBefore('?').substringBefore('#'))
+    override fun getResourceHandler(browser: CefBrowser?, frame: CefFrame?, request: CefRequest): CefResourceHandler {
+        val path = request.url.removePrefix("$PREVIEW_ORIGIN/").substringBefore('?').substringBefore('#')
+        val exportId = EXPORT_PATH.matchEntire(path)?.groupValues?.get(1)?.toLongOrNull()
+        return if (exportId != null) {
+            ResourceHandler(SVG_MIME_TYPE) { exportSvg(exportId)?.toByteArray(Charsets.UTF_8) }
+        } else {
+            ResourceHandler(mimeType(path)) { pluginResource(path) }
+        }
+    }
+}
+
+private const val SVG_MIME_TYPE = "image/svg+xml"
+
+private fun mimeType(path: String): String = when (path.substringAfterLast('.')) {
+    "html" -> "text/html"
+    "css" -> "text/css"
+    else -> "text/javascript"
+}
+
+private fun pluginResource(path: String): ByteArray? = if (RESOURCE_PATH.matches(path)) {
+    ResourceHandler::class.java.classLoader.getResourceAsStream("preview/$path")?.use { it.readBytes() }
+} else {
+    null
 }
 
 private fun isOwnUrl(url: String): Boolean = url.startsWith("$PREVIEW_ORIGIN/")
 
-/** Answers one request. Unknown paths, `/favicon.ico` among them, get a 404. */
-private class ResourceHandler(private val path: String) : CefResourceHandlerAdapter() {
+/** Answers one request with [body]. Unknown paths, `/favicon.ico` among them, get a 404. */
+private class ResourceHandler(private val mimeType: String, private val body: () -> ByteArray?) :
+    CefResourceHandlerAdapter() {
     private var bytes: ByteArray? = null
     private var offset = 0
 
     override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
-        bytes = if (RESOURCE_PATH.matches(path)) {
-            ResourceHandler::class.java.classLoader.getResourceAsStream("preview/$path")?.use { it.readBytes() }
-        } else {
-            null
-        }
+        bytes = body()
         callback.Continue()
         return true
     }
@@ -94,11 +115,7 @@ private class ResourceHandler(private val path: String) : CefResourceHandlerAdap
             return
         }
         response.status = 200
-        response.mimeType = when (path.substringAfterLast('.')) {
-            "html" -> "text/html"
-            "css" -> "text/css"
-            else -> "text/javascript"
-        }
+        response.mimeType = mimeType
         responseLength.set(body.size)
     }
 

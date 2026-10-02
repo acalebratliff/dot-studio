@@ -22,7 +22,7 @@ import javax.swing.JComponent
 internal class DotPreviewFileEditor(project: Project, private val file: VirtualFile, private val document: Document) :
     UserDataHolderBase(),
     FileEditor {
-    private val panel = project.service<DotPreviewService>().createPanel(this)
+    val panel = project.service<DotPreviewService>().createPanel(this)
 
     // EDT only. True when the document changed while the preview was hidden, or before it was first shown.
     private var stale = true

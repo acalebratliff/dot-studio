@@ -39,4 +39,14 @@
         <annotator language="DotStudio" implementationClass="io.github.acalebratliff.dotstudio.lang.DotAnnotator"/>
         <fileEditorProvider implementation="io.github.acalebratliff.dotstudio.preview.DotSplitEditorProvider"/>
     </extensions>
+
+    <actions>
+        <!-- The id is EXPORT_GROUP_ID in DotSplitEditor.kt, which puts this group on the split editor's toolbar. -->
+        <group id="DotStudio.PreviewExport" class="io.github.acalebratliff.dotstudio.preview.ExportGroup" popup="true" icon="AllIcons.ToolbarDecorator.Export">
+            <action id="DotStudio.ExportSvg" class="io.github.acalebratliff.dotstudio.preview.ExportSvgAction"/>
+            <action id="DotStudio.ExportPng1x" class="io.github.acalebratliff.dotstudio.preview.ExportPng1xAction"/>
+            <action id="DotStudio.ExportPng2x" class="io.github.acalebratliff.dotstudio.preview.ExportPng2xAction"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </group>
+    </actions>
 </idea-plugin>
