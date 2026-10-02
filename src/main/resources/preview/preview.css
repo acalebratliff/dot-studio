@@ -1,17 +1,25 @@
 body {
     margin: 0;
     font: 13px system-ui, sans-serif;
+    background: var(--background, Canvas);
+    color: var(--foreground, CanvasText);
 }
 
 #message {
     padding: 8px 12px;
     white-space: pre-wrap;
-    background: #fdecea;
-    color: #611a15;
+    background: var(--error-background, #fdecea);
+    border-bottom: 1px solid var(--error-border, #f2b6bb);
 }
 
+/* Graphviz draws its own background (white unless the DOT sets bgcolor), so the graph keeps every colour it was
+   given and stays readable on a dark page as a card. */
 #graph {
     padding: 8px;
+}
+
+#graph svg {
+    border-radius: 4px;
 }
 
 .rendering #graph {
