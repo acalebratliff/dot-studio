@@ -7,14 +7,14 @@ DOT file(0,36)
     DotStmtListImpl(stmt_list)(14,34)
       DotAttrStmtImpl(attr_stmt)(14,18)
         PsiElement(edge)('edge')(14,18)
-        PsiErrorElement:<id> or '[' expected, got ';'(18,18)
+        PsiErrorElement:'[' expected, got ';'(18,18)
           <empty list>
       PsiElement(;)(';')(18,19)
       PsiWhiteSpace('\n    ')(19,24)
       DotAttrStmtImpl(attr_stmt)(24,28)
         PsiElement(node)('node')(24,28)
-      PsiErrorElement:';', ID or '[' expected, got 'a'(28,28)
-        <empty list>
+        PsiErrorElement:'[' expected, got 'a'(28,28)
+          <empty list>
       PsiWhiteSpace('\n    ')(28,33)
       DotNodeStmtImpl(node_stmt)(33,34)
         DotNodeIdImpl(node_id)(33,34)

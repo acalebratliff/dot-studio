@@ -68,7 +68,8 @@ private stmt_start ::= id_start | GRAPH | NODE | EDGE | SUBGRAPH | '{'
 private stmt ::= attr_stmt | attr_assignment | edge_stmt | node_stmt | subgraph (subgraph_edge_stmt | subgraph_node_stmt)?
 
 // grammar.y also accepts a macro name, `node m = [...]`; Graphviz warns that macros aren't implemented and applies the list.
-attr_stmt ::= (GRAPH | NODE | EDGE) (id '=')? attr_list+ {pin=1}
+// The guard tries the macro name only for an ID followed by '=', so a missing list reads "'[' expected" alone.
+attr_stmt ::= (GRAPH | NODE | EDGE) (!(!id_start | id !'=') id '=')? attr_list+ {pin=1}
 attr_list ::= '[' a_list? ']' {pin=1}
 a_list ::= a_list_entry+
 // a_list ends at anything that can't continue it, so an unclosed '[' stops at the next statement with one "']' expected"
@@ -81,7 +82,7 @@ attr_assignment ::= id '=' id {pin=2}
 
 edge_stmt ::= node_list edgeRHS attr_list*
 left subgraph_edge_stmt ::= edgeRHS attr_list* {elementType=edge_stmt}
-edgeRHS ::= (edgeop (node_list | subgraph))+ {pin(".*")=1}
+edgeRHS ::= (edgeop (node_list | subgraph))+ {pin(".*")=1 name="edge operator"}
 private edgeop ::= '->' | '--'
 
 node_stmt ::= node_list attr_list*
@@ -100,5 +101,5 @@ subgraph ::= SUBGRAPH id? body | body {pin(".*")=1}
 
 // grammar.y's qatom: scan.l returns quoted and HTML strings alike as T_qatom, and either concatenates with '+'.
 id ::= ID | NUMERAL | qatom ('+' qatom)* {pin(".*")=1}
-private qatom ::= QUOTED_STRING | HTML_STRING
+private qatom ::= QUOTED_STRING | HTML_STRING {name="string"}
 private id_start ::= ID | NUMERAL | HTML_STRING | QUOTED_STRING
