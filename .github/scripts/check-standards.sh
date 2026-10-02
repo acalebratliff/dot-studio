@@ -42,7 +42,7 @@ FIXTURES="$(cd "$(dirname "$0")/.." && pwd)/lint-fixtures"
 
 fixture() { # $1 = fixture file name; builds a fresh tracked repo holding it under src/main
   local d
-  d=$(mktemp -d)
+  d=$(mktemp -d -p "$SELFTEST_TMP")
   git -C "$d" init -q
   mkdir -p "$d/src/main"
   cp "$FIXTURES/$1" "$d/src/main/$1"
@@ -52,6 +52,8 @@ fixture() { # $1 = fixture file name; builds a fresh tracked repo holding it und
 
 selftest() {
   local f d
+  SELFTEST_TMP=$(mktemp -d)
+  trap 'rm -rf "$SELFTEST_TMP"' EXIT
   for f in bare-todo.bnf bare-fixme.kts bare-todo.xml mixed-line.kt; do
     d=$(fixture "$f"); expect 1 scan_todo "$d"
   done
