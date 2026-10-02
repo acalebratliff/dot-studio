@@ -30,7 +30,8 @@ internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope) {
         }
     }
 
-    fun showSource(dot: String) {
+    /** [dot] must be an immutable snapshot, such as `Document.getImmutableCharSequence()`. */
+    fun showSource(dot: CharSequence) {
         pipeline?.submit(dot)
     }
 

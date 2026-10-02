@@ -34,5 +34,6 @@
         <lang.commenter language="DotStudio" implementationClass="io.github.acalebratliff.dotstudio.lang.DotCommenter"/>
         <lang.braceMatcher language="DotStudio" implementationClass="io.github.acalebratliff.dotstudio.lang.DotBraceMatcher"/>
         <annotator language="DotStudio" implementationClass="io.github.acalebratliff.dotstudio.lang.DotAnnotator"/>
+        <fileEditorProvider implementation="io.github.acalebratliff.dotstudio.preview.DotSplitEditorProvider"/>
     </extensions>
 </idea-plugin>

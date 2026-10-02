@@ -35,18 +35,19 @@ internal class PreviewPipeline(
     private val debounce: Duration = 300.milliseconds,
     private val timeout: Duration = 10.seconds,
 ) : Disposable {
-    private val source = MutableStateFlow<String?>(null)
+    private val source = MutableStateFlow<CharSequence?>(null)
 
     private val job = scope.launch {
-        source.filterNotNull().collectLatest { dot ->
+        source.filterNotNull().collectLatest { snapshot ->
             // collectLatest cancels this delay when newer source arrives, which is the debounce.
             delay(debounce)
             onState(PreviewState.Rendering)
-            onState(render(dot))
+            onState(render(snapshot.toString()))
         }
     }
 
-    fun submit(dot: String) {
+    /** [dot] must be an immutable snapshot; it is turned into a String only after the debounce, off the caller's thread. */
+    fun submit(dot: CharSequence) {
         source.value = dot
     }
 
