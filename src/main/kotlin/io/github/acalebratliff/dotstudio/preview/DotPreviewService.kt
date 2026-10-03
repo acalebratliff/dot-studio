@@ -18,7 +18,8 @@ import kotlin.time.Duration.Companion.seconds
 /** Supplies the project's coroutine scope to preview panels, so renders and exports stop when the project closes. */
 @Service(Service.Level.PROJECT)
 internal class DotPreviewService(private val project: Project, private val scope: CoroutineScope) {
-    fun createPanel(parent: Disposable): DotPreviewPanel = DotPreviewPanel(parent, scope)
+    fun createPanel(parent: Disposable): DotPreviewPanel =
+        DotPreviewPanel(parent, scope) { dot -> inspectDot(project, dot) }
 
     /**
      * Writes [svg], the graph on show when the export started, to [target] as [format]. Failures show a dialog.

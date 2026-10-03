@@ -109,6 +109,25 @@ internal class PreviewPipelineTest {
         assertTrue(failed.message.contains("RangeError"))
     }
 
+    @Test
+    fun `the graph count of the source goes with the rendered svg`() = runBlocking {
+        pipeline(inspect = { DotSourceInfo(graphCount = 2) }).submit("two graphs")
+        renderer.replyTo("two graphs").complete(RenderResult.Svg("<svg/>"))
+
+        assertEquals(PreviewState.Rendering, states.receiveWithin())
+        assertEquals(PreviewState.Rendered("<svg/>", graphCount = 2), states.receiveWithin())
+    }
+
+    @Test
+    fun `a blank source is empty, not an error, and is not rendered`() = runBlocking {
+        pipeline(inspect = { DotSourceInfo(graphCount = 0, isBlank = true) }).submit("// nothing yet")
+
+        assertEquals(PreviewState.Empty, states.receiveWithin())
+        delay(100.milliseconds)
+        assertTrue(renderer.started.tryReceive().isFailure)
+        assertTrue(states.tryReceive().isFailure)
+    }
+
     private suspend fun renderOnce(result: RenderResult): PreviewState.Failed {
         pipeline().submit("graph")
         renderer.replyTo("graph").complete(result)
@@ -116,8 +135,11 @@ internal class PreviewPipelineTest {
         return states.receiveWithin() as PreviewState.Failed
     }
 
-    private fun pipeline(debounce: Duration = Duration.ZERO, timeout: Duration = 5.seconds): PreviewPipeline =
-        PreviewPipeline(scope, renderer, { states.send(it) }, debounce, timeout)
+    private fun pipeline(
+        debounce: Duration = Duration.ZERO,
+        timeout: Duration = 5.seconds,
+        inspect: suspend (String) -> DotSourceInfo = { DotSourceInfo(graphCount = 1) },
+    ): PreviewPipeline = PreviewPipeline(scope, renderer, { states.send(it) }, inspect, debounce, timeout)
 
     private suspend fun <T> Channel<T>.receiveWithin(): T = withTimeout(5.seconds) { receive() }
 
