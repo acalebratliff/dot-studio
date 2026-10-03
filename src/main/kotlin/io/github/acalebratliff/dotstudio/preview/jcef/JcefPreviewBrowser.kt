@@ -1,5 +1,6 @@
 package io.github.acalebratliff.dotstudio.preview.jcef
 
+import com.intellij.ide.ActivityTracker
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -17,7 +18,9 @@ import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.DotRenderer
 import io.github.acalebratliff.dotstudio.preview.PngResult
 import io.github.acalebratliff.dotstudio.preview.PreviewState
+import io.github.acalebratliff.dotstudio.preview.PreviewZoom
 import io.github.acalebratliff.dotstudio.preview.RenderResult
+import io.github.acalebratliff.dotstudio.preview.ZoomCommand
 import io.github.acalebratliff.dotstudio.preview.currentPreviewTheme
 import io.github.acalebratliff.dotstudio.preview.pngFailure
 import io.github.acalebratliff.dotstudio.preview.pngResult
@@ -68,14 +71,26 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     @Volatile var renderedSvg: String? = null
         private set
 
+    /** The page's zoom, or null until it shows a graph. */
+    @Volatile var zoom: PreviewZoom? = null
+        private set
+
     val component: JComponent get() = root
 
     // Runs on a CEF thread, so it only completes a deferred that a coroutine is waiting on.
     private val replyHandler = DetachableQueryHandler { payload ->
         when (val reply = parsePageReply(payload)) {
             null -> LOG.warn("Ignoring a malformed reply from the preview page")
+
             is PageReply.Render -> pendingRenders[reply.id]?.complete(reply.result)
+
             is PageReply.PngReply -> pendingPngs[reply.id]?.complete(reply)
+
+            is PageReply.Zoom -> {
+                zoom = reply.zoom
+                // Ctrl+wheel and dragging happen inside the page, so nothing else tells toolbars to update.
+                ActivityTracker.getInstance().inc()
+            }
         }
         null
     }
@@ -200,6 +215,10 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
             val message = pageFailure?.let { DotStudioBundle.message("preview.error.page", it) } ?: state.message
             withContext(Dispatchers.EDT) { setContent(JBPanelWithEmptyText().withEmptyText(message), notice = true) }
         }
+    }
+
+    fun zoom(command: ZoomCommand) {
+        if (pageLoad.isCompleted && pageFailure == null) execute(zoomScript(command))
     }
 
     private fun applyTheme() {

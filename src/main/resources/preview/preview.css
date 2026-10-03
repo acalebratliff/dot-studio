@@ -1,11 +1,20 @@
+html, body {
+    height: 100%;
+}
+
 body {
     margin: 0;
+    display: flex;
+    flex-direction: column;
     font: 13px system-ui, sans-serif;
     background: var(--background, Canvas);
     color: var(--foreground, CanvasText);
 }
 
 #message {
+    flex: none;
+    max-height: 50%;
+    overflow: auto;
     padding: 8px 12px;
     white-space: pre-wrap;
     background: var(--error-background, #fdecea);
@@ -15,11 +24,30 @@ body {
 /* Graphviz draws its own background (white unless the DOT sets bgcolor), so the graph keeps every colour it was
    given and stays readable on a dark page as a card. */
 #graph {
+    flex: auto;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    overflow: auto;
     padding: 8px;
 }
 
+/* Auto margins centre a graph narrower than the preview and drop to zero for a wider one, so its left edge stays
+   reachable by scrolling. */
 #graph svg {
+    flex: none;
+    margin: 0 auto;
     border-radius: 4px;
+}
+
+/* Dragging pans a graph larger than the preview, so its label text cannot be selected then; otherwise it can. */
+.pannable #graph {
+    cursor: grab;
+    user-select: none;
+}
+
+.panning #graph {
+    cursor: grabbing;
 }
 
 .rendering #graph {
