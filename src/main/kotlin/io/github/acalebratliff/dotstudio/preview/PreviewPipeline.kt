@@ -19,19 +19,24 @@ import kotlin.time.Duration.Companion.seconds
 internal sealed interface PreviewState {
     data object Rendering : PreviewState
 
-    data class Rendered(val svg: String) : PreviewState
+    /** The source is empty, or only comments: there is no graph to render, and that is not an error. */
+    data object Empty : PreviewState
+
+    /** [graphCount] is how many graphs the source holds; only the first is rendered. */
+    data class Rendered(val svg: String, val graphCount: Int = 1) : PreviewState
 
     data class Failed(val message: @Nls String) : PreviewState
 }
 
 /**
- * Renders the latest submitted DOT source after [debounce] of quiet. A newer submission cancels the render in
- * progress, so a superseded render never reaches [onState]. Disposing stops everything.
+ * Renders the latest submitted DOT source after [debounce] of quiet, having asked [inspect] about it. A newer
+ * submission cancels the render in progress, so a superseded render never reaches [onState]. Disposing stops everything.
  */
 internal class PreviewPipeline(
     scope: CoroutineScope,
     private val renderer: DotRenderer,
     private val onState: suspend (PreviewState) -> Unit,
+    private val inspect: suspend (String) -> DotSourceInfo,
     private val debounce: Duration = 300.milliseconds,
     private val timeout: Duration = 10.seconds,
 ) : Disposable {
@@ -41,12 +46,21 @@ internal class PreviewPipeline(
         source.filterNotNull().collectLatest { snapshot ->
             // collectLatest cancels this delay when newer source arrives, which is the debounce.
             delay(debounce)
-            onState(PreviewState.Rendering)
-            onState(render(snapshot.toString()))
+            val dot = snapshot.toString()
+            val info = inspect(dot)
+            if (info.isBlank) {
+                onState(PreviewState.Empty)
+            } else {
+                onState(PreviewState.Rendering)
+                onState(render(dot, info))
+            }
         }
     }
 
-    /** [dot] must be an immutable snapshot; it is turned into a String only after the debounce, off the caller's thread. */
+    /**
+     * [dot] must be an immutable snapshot; it is turned into a String only after the debounce, off the caller's
+     * thread.
+     */
     fun submit(dot: CharSequence) {
         source.value = dot
     }
@@ -55,13 +69,13 @@ internal class PreviewPipeline(
         job.cancel()
     }
 
-    private suspend fun render(dot: String): PreviewState {
+    private suspend fun render(dot: String, info: DotSourceInfo): PreviewState {
         val result = withTimeoutOrNull(timeout) { renderer.render(dot) }
         LOG.debug { "Render finished: ${result?.javaClass?.simpleName ?: "timed out after $timeout"}" }
         return when (result) {
             null -> PreviewState.Failed(DotStudioBundle.message("preview.error.timeout", timeout.inWholeSeconds))
 
-            is RenderResult.Svg -> PreviewState.Rendered(result.svg)
+            is RenderResult.Svg -> PreviewState.Rendered(result.svg, info.graphCount)
 
             is RenderResult.DotErrors -> PreviewState.Failed(dotErrorMessage(result.messages))
 

@@ -58,7 +58,8 @@ internal abstract class ExportAction(private val format: ExportFormat) : DumbAwa
     }
 }
 
-private fun dotPreviewOf(e: AnActionEvent): DotPreviewFileEditor? {
+/** The DOT preview open for the event's file, or null when that file has none. */
+internal fun dotPreviewOf(e: AnActionEvent): DotPreviewFileEditor? {
     val project = e.project ?: return null
     val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
     return FileEditorManager.getInstance(project).getEditors(file)

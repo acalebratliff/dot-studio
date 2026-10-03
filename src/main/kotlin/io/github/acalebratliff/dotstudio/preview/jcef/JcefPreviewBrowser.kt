@@ -1,5 +1,6 @@
 package io.github.acalebratliff.dotstudio.preview.jcef
 
+import com.intellij.ide.ActivityTracker
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -9,15 +10,17 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
 import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.DotRenderer
 import io.github.acalebratliff.dotstudio.preview.PngResult
+import io.github.acalebratliff.dotstudio.preview.PreviewNotice
 import io.github.acalebratliff.dotstudio.preview.PreviewState
+import io.github.acalebratliff.dotstudio.preview.PreviewZoom
 import io.github.acalebratliff.dotstudio.preview.RenderResult
+import io.github.acalebratliff.dotstudio.preview.ZoomCommand
 import io.github.acalebratliff.dotstudio.preview.currentPreviewTheme
 import io.github.acalebratliff.dotstudio.preview.pngFailure
 import io.github.acalebratliff.dotstudio.preview.pngResult
@@ -68,20 +71,36 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     @Volatile var renderedSvg: String? = null
         private set
 
+    /** The page's zoom, or null until it shows a graph. */
+    @Volatile var zoom: PreviewZoom? = null
+        private set
+
     val component: JComponent get() = root
+
+    // Runs on a CEF thread, so it only completes a deferred that a coroutine is waiting on.
+    private val replyHandler = DetachableQueryHandler { payload ->
+        when (val reply = parsePageReply(payload)) {
+            null -> LOG.warn("Ignoring a malformed reply from the preview page")
+
+            is PageReply.Render -> pendingRenders[reply.id]?.complete(reply.result)
+
+            is PageReply.PngReply -> pendingPngs[reply.id]?.complete(reply)
+
+            is PageReply.Zoom -> {
+                zoom = reply.zoom
+                // Ctrl+wheel and dragging happen inside the page, so nothing else tells toolbars to update.
+                ActivityTracker.getInstance().inc()
+            }
+        }
+        null
+    }
 
     init {
         Disposer.register(parent, browser)
         Disposer.register(parent, replyQuery)
-        // Runs on a CEF thread, so it only completes a deferred that a coroutine is waiting on.
-        replyQuery.addHandler { payload ->
-            when (val reply = parsePageReply(payload)) {
-                null -> LOG.warn("Ignoring a malformed reply from the preview page")
-                is PageReply.Render -> pendingRenders[reply.id]?.complete(reply.result)
-                is PageReply.PngReply -> pendingPngs[reply.id]?.complete(reply)
-            }
-            null
-        }
+        replyQuery.addHandler(replyHandler.handler)
+        // A child is disposed before its parent, so the handler lets go of this browser before the query goes.
+        Disposer.register(replyQuery) { replyHandler.detach() }
         browser.jbCefClient.addRequestHandler(PreviewRequestHandler { id -> exportSvgs[id] }, browser.cefBrowser)
         browser.jbCefClient.addLoadHandler(
             object : CefLoadHandlerAdapter() {
@@ -179,23 +198,48 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     suspend fun show(state: PreviewState) {
         when (state) {
             PreviewState.Rendering -> Unit
+
             is PreviewState.Rendered -> renderedSvg = state.svg
+
             is PreviewState.Failed -> renderedSvg = null
+
+            PreviewState.Empty -> {
+                renderedSvg = null
+                zoom = null
+                // Empty skips the render, which is what usually waits for the page.
+                pageLoad.await()
+            }
         }
         if (pageLoad.isCompleted && pageFailure == null) {
             if (noticeShown) withContext(Dispatchers.EDT) { setContent(browser.component, notice = false) }
             execute(
                 when (state) {
                     PreviewState.Rendering -> "dotStudio.showRendering()"
-                    is PreviewState.Rendered -> "dotStudio.showSvg(${jsStringLiteral(state.svg)})"
+
+                    PreviewState.Empty -> "dotStudio.showEmpty(${jsStringLiteral(
+                        DotStudioBundle.message("preview.empty"),
+                    )})"
+
+                    is PreviewState.Rendered -> "dotStudio.showSvg(${jsStringLiteral(
+                        state.svg,
+                    )}, ${jsStringLiteral(noticeFor(state))})"
+
                     is PreviewState.Failed -> "dotStudio.showMessage(${jsStringLiteral(state.message)})"
                 },
             )
-        } else if (state is PreviewState.Failed) {
-            // The page cannot show anything yet (or ever), so the failure goes to a Swing notice instead.
-            val message = pageFailure?.let { DotStudioBundle.message("preview.error.page", it) } ?: state.message
-            withContext(Dispatchers.EDT) { setContent(JBPanelWithEmptyText().withEmptyText(message), notice = true) }
+        } else {
+            // The page cannot show anything yet (or ever), so what it would say goes to a Swing notice instead.
+            val message = swingNoticeText(state, pageFailure)
+            if (message != null) withContext(Dispatchers.EDT) { setContent(PreviewNotice(message), notice = true) }
         }
+    }
+
+    // Empty when the page needs no notice. Only the first graph of a file is rendered, so the page says so.
+    private fun noticeFor(state: PreviewState.Rendered): String =
+        if (state.graphCount > 1) DotStudioBundle.message("preview.notice.multiple.graphs") else ""
+
+    fun zoom(command: ZoomCommand) {
+        if (pageLoad.isCompleted && pageFailure == null) execute(zoomScript(command))
     }
 
     private fun applyTheme() {

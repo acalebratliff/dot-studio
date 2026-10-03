@@ -1,6 +1,7 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jmailen.gradle.kotlinter.tasks.FormatTask
 import org.jmailen.gradle.kotlinter.tasks.LintTask
@@ -23,6 +24,9 @@ kotlin {
         apiVersion = KotlinVersion.KOTLIN_2_1
         languageVersion = KotlinVersion.KOTLIN_2_1
         allWarningsAsErrors = true
+        // Without this, a class implementing a platform interface such as DynamicPluginListener gets stubs that
+        // override and call every default method, which Plugin Verifier reports as deprecated and experimental use.
+        jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
     }
 }
 
