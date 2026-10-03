@@ -10,13 +10,13 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
 import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.DotRenderer
 import io.github.acalebratliff.dotstudio.preview.PngResult
+import io.github.acalebratliff.dotstudio.preview.PreviewNotice
 import io.github.acalebratliff.dotstudio.preview.PreviewState
 import io.github.acalebratliff.dotstudio.preview.PreviewZoom
 import io.github.acalebratliff.dotstudio.preview.RenderResult
@@ -230,7 +230,7 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
         } else if (state is PreviewState.Failed) {
             // The page cannot show anything yet (or ever), so the failure goes to a Swing notice instead.
             val message = pageFailure?.let { DotStudioBundle.message("preview.error.page", it) } ?: state.message
-            withContext(Dispatchers.EDT) { setContent(JBPanelWithEmptyText().withEmptyText(message), notice = true) }
+            withContext(Dispatchers.EDT) { setContent(PreviewNotice(message), notice = true) }
         }
     }
 

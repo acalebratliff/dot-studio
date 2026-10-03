@@ -4,7 +4,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.components.JBPanelWithEmptyText
 import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.jcef.JcefPreviewBrowser
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +49,7 @@ internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope, inspec
             LOG.warn("JCEF is unavailable or not supported, so the DOT preview shows a notice instead")
             pipeline = null
             browser = null
-            component = JBPanelWithEmptyText().withEmptyText(DotStudioBundle.message("preview.jcef.unavailable"))
+            component = PreviewNotice(DotStudioBundle.message("preview.jcef.unavailable"))
         }
     }
 

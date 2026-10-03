@@ -5,7 +5,6 @@ import com.intellij.openapi.fileEditor.TextEditorWithPreview
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import com.intellij.ui.components.JBPanelWithEmptyText
 import io.github.acalebratliff.dotstudio.DotStudioBundle
 import org.jdom.Element
 
@@ -32,8 +31,8 @@ internal class DotSplitEditorProviderTest : BasePlatformTestCase() {
             assertEquals(file, split.previewEditor.file)
             assertEquals("digraph { a -> b }", split.textEditor.editor.document.text)
             // Tests run with JCEF off (build.gradle.kts), so the preview is the notice.
-            val notice = assertInstanceOf(split.previewEditor.component, JBPanelWithEmptyText::class.java)
-            assertEquals(DotStudioBundle.message("preview.jcef.unavailable"), notice.emptyText.text)
+            val notice = assertInstanceOf(split.previewEditor.component, PreviewNotice::class.java)
+            assertEquals(DotStudioBundle.message("preview.jcef.unavailable"), notice.text)
         } finally {
             Disposer.dispose(editor)
         }
