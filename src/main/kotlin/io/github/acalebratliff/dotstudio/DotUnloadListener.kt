@@ -2,8 +2,8 @@ package io.github.acalebratliff.dotstudio
 
 import com.intellij.ide.plugins.DynamicPluginListener
 import com.intellij.ide.plugins.IdeaPluginDescriptor
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.vfs.VirtualFileManager
 import io.github.acalebratliff.dotstudio.lang.DotFileType
@@ -15,8 +15,9 @@ import io.github.acalebratliff.dotstudio.lang.DotFileType
  *
  * The files closed here are reopened, in the same project, when the plugin loads again in this IDE session (an update
  * or a reinstall). The 2026.2 update path reports isUpdate = false to listeners, so the flag is not consulted. The list
- * is kept in the project's properties because nothing of the old plugin's may outlive it; it is tagged with this
- * process, so a list left behind by a restart is dropped rather than reopened later. Both callbacks run on the EDT.
+ * must outlive this plugin's classes and must not be saved: writing it to the project's properties during the unload
+ * made 2026.2 log a reparse error for workspace.xml (#26). So it is a JVM system property per project, gone after a
+ * restart. Both callbacks run on the EDT.
  *
  * Before Java 24 every Swing component keeps the protection domains on the stack that built it. Closing a tab here
  * makes the platform rebuild the editor tabs' toolbar inside this call, and that toolbar then keeps the plugin's class
@@ -31,11 +32,8 @@ internal class DotUnloadListener(
         for (project in ProjectManager.getInstance().openProjects) {
             val editors = FileEditorManager.getInstance(project)
             val dotFiles = editors.openFiles.filter { it.fileType == DotFileType }
-            if (dotFiles.isNotEmpty()) {
-                val properties = PropertiesComponent.getInstance(project)
-                properties.setValue(REOPEN_PROCESS_KEY, currentProcess())
-                properties.setList(REOPEN_FILES_KEY, dotFiles.map { it.url })
-            }
+            val urls = dotFiles.map { it.url }
+            if (urls.isNotEmpty()) System.setProperty(reopenKey(project), urls.joinToString(URL_SEPARATOR))
             dotFiles.forEach(editors::closeFile)
         }
     }
@@ -43,25 +41,21 @@ internal class DotUnloadListener(
     override fun pluginLoaded(pluginDescriptor: IdeaPluginDescriptor) {
         if (pluginDescriptor.pluginId.idString != PLUGIN_ID) return
         for (project in ProjectManager.getInstance().openProjects) {
-            val properties = PropertiesComponent.getInstance(project)
-            val urls = properties.getList(REOPEN_FILES_KEY).orEmpty()
-            val sameProcess = properties.getValue(REOPEN_PROCESS_KEY) == currentProcess()
-            properties.setList(REOPEN_FILES_KEY, null)
-            properties.unsetValue(REOPEN_PROCESS_KEY)
-            if (!sameProcess) continue
+            val urls = System.clearProperty(reopenKey(project))?.split(URL_SEPARATOR) ?: continue
             val editors = FileEditorManager.getInstance(project)
             urls.mapNotNull(VirtualFileManager.getInstance()::findFileByUrl).forEach { editors.openFile(it, false) }
         }
     }
-
-    private fun currentProcess(): String = ProcessHandle.current().pid().toString()
 
     private companion object {
         const val PLUGIN_ID = "io.github.acalebratliff.dotstudio"
 
         // JEP 486: from Java 24 a new component no longer records the protection domains of its callers.
         const val FIRST_JAVA_WITHOUT_CALLER_CONTEXT = 24
-        const val REOPEN_FILES_KEY = "dot-studio.reopen-after-update.files"
-        const val REOPEN_PROCESS_KEY = "dot-studio.reopen-after-update.process"
+
+        // VFS URLs are not escaped, so a file name's line break stays in the URL; no file name can contain NUL.
+        const val URL_SEPARATOR = "\u0000"
+
+        fun reopenKey(project: Project): String = "dot-studio.reopen-after-reload.${project.locationHash}"
     }
 }

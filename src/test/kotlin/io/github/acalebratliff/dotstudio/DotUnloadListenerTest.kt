@@ -2,7 +2,6 @@ package io.github.acalebratliff.dotstudio
 
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -41,6 +40,16 @@ internal class DotUnloadListenerTest : BasePlatformTestCase() {
         assertTrue(editors.isFileOpen(dot))
     }
 
+    fun testReopensFilesWhoseNamesContainALineBreak() {
+        val odd = myFixture.configureByText("line\nbreak.dot", "digraph {}").virtualFile
+        val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
+
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
+        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
+        assertTrue(editors.isFileOpen(odd))
+        assertTrue(editors.isFileOpen(dot))
+    }
+
     fun testReopensOnlyOnce() {
         val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
         DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
@@ -60,15 +69,21 @@ internal class DotUnloadListenerTest : BasePlatformTestCase() {
         assertFalse(editors.isFileOpen(dot))
     }
 
-    fun testDropsAListLeftByAnotherProcess() {
+    fun testReopensOnlyInTheProjectThatClosedTheFiles() {
         val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
-        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = true)
-        // As if the update had ended in a restart: the list was saved by an earlier process.
-        PropertiesComponent.getInstance(project).setValue("dot-studio.reopen-after-update.process", "-1")
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
 
-        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
-        assertFalse(editors.isFileOpen(dot))
-        assertNull(PropertiesComponent.getInstance(project).getList("dot-studio.reopen-after-update.files"))
+        // The list is keyed by project, so a list saved for another project (here: a different key) is not used.
+        val key = System.getProperties().stringPropertyNames().single {
+            it.startsWith("dot-studio.reopen-after-reload.")
+        }
+        System.setProperty(key.replace(project.locationHash, "other-project"), System.clearProperty(key))
+        try {
+            DotUnloadListener(closesFiles = true).pluginLoaded(ours())
+            assertFalse(editors.isFileOpen(dot))
+        } finally {
+            System.clearProperty(key.replace(project.locationHash, "other-project"))
+        }
     }
 
     fun testLeavesFilesToThePlatformWhenClosingWouldPinTheClassLoader() {
@@ -76,7 +91,11 @@ internal class DotUnloadListenerTest : BasePlatformTestCase() {
 
         DotUnloadListener(closesFiles = false).beforePluginUnload(ours(), isUpdate = true)
         assertTrue(editors.isFileOpen(dot))
-        assertNull(PropertiesComponent.getInstance(project).getList("dot-studio.reopen-after-update.files"))
+        assertTrue(
+            System.getProperties().stringPropertyNames().none {
+                it.startsWith("dot-studio.reopen-after-reload.")
+            },
+        )
     }
 
     private fun ours(): IdeaPluginDescriptor = plugin("io.github.acalebratliff.dotstudio")
