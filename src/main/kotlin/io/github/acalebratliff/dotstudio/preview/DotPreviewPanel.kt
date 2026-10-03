@@ -32,6 +32,12 @@ internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope) {
         renderedSvg,
     )
 
+    /** False when there is no browser, so the page can never be zoomed. */
+    val canZoom: Boolean get() = browser != null
+
+    /** The page's zoom, or null while no graph is on show. */
+    val zoom: PreviewZoom? get() = browser?.zoom
+
     init {
         if (isJcefAvailable()) {
             service<JcefProxyPreload>().beforeFirstBrowser()
@@ -51,6 +57,10 @@ internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope) {
     /** [dot] must be an immutable snapshot, such as `Document.getImmutableCharSequence()`. */
     fun showSource(dot: CharSequence) {
         pipeline?.submit(dot)
+    }
+
+    fun zoom(command: ZoomCommand) {
+        browser?.zoom(command)
     }
 
     suspend fun rasterisePng(svg: String, scale: Int): PngResult = browser?.rasterisePng(svg, scale)

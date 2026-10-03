@@ -14,7 +14,7 @@ import java.nio.file.Path
 import java.util.Base64
 import kotlin.time.Duration
 
-/** What an export writes. A PNG is rasterised at [scale] times the size the preview shows the graph at. */
+/** What an export writes. A PNG is rasterised at [scale] times the graph's actual size, whatever the preview's zoom. */
 internal sealed interface ExportFormat {
     val extension: String
 

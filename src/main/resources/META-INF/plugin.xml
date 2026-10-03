@@ -46,6 +46,13 @@
     </applicationListeners>
 
     <actions>
+        <!-- The id is ZOOM_GROUP_ID in DotSplitEditor.kt, which puts this group on the split editor's toolbar. -->
+        <group id="DotStudio.PreviewZoom">
+            <action id="DotStudio.ZoomIn" class="io.github.acalebratliff.dotstudio.preview.ZoomInAction" icon="AllIcons.General.ZoomIn"/>
+            <action id="DotStudio.ZoomOut" class="io.github.acalebratliff.dotstudio.preview.ZoomOutAction" icon="AllIcons.General.ZoomOut"/>
+            <action id="DotStudio.ActualSize" class="io.github.acalebratliff.dotstudio.preview.ActualSizeAction" icon="AllIcons.General.ActualZoom"/>
+            <action id="DotStudio.ZoomToFit" class="io.github.acalebratliff.dotstudio.preview.ZoomToFitAction" icon="AllIcons.General.FitContent"/>
+        </group>
         <!-- The id is EXPORT_GROUP_ID in DotSplitEditor.kt, which puts this group on the split editor's toolbar. -->
         <group id="DotStudio.PreviewExport" class="io.github.acalebratliff.dotstudio.preview.ExportGroup" popup="true" icon="AllIcons.ToolbarDecorator.Export">
             <action id="DotStudio.ExportSvg" class="io.github.acalebratliff.dotstudio.preview.ExportSvgAction"/>
