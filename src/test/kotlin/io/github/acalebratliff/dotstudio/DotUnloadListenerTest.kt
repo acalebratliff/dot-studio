@@ -32,8 +32,28 @@ internal class DotUnloadListenerTest : BasePlatformTestCase() {
         assertTrue(editors.isFileOpen(dot))
     }
 
-    fun testDoesNotReopenAfterUninstallAndInstall() {
+    fun testReopensDotFilesWhenReinstalledInTheSameSession() {
         val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
+
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
+        assertFalse(editors.isFileOpen(dot))
+        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
+        assertTrue(editors.isFileOpen(dot))
+    }
+
+    fun testReopensOnlyOnce() {
+        val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
+        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
+        editors.closeFile(dot)
+
+        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
+        assertFalse(editors.isFileOpen(dot))
+    }
+
+    fun testDoesNotReopenFilesTheUserClosed() {
+        val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
+        editors.closeFile(dot)
 
         DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
         DotUnloadListener(closesFiles = true).pluginLoaded(ours())

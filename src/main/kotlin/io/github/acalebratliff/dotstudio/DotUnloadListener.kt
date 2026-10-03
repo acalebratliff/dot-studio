@@ -13,9 +13,10 @@ import io.github.acalebratliff.dotstudio.lang.DotFileType
  * first and retires our element types with it, so an editor still showing a DOT file repaints with element types of
  * an unloaded plugin and the platform logs an error (#26).
  *
- * On an update the closed files are reopened once the new version has loaded. The list is kept in the project's
- * properties because nothing of the old plugin's may outlive it; it is tagged with this process, so a list left by an
- * update that ended in a restart is dropped rather than reopened later. Both callbacks run on the EDT.
+ * The files closed here are reopened, in the same project, when the plugin loads again in this IDE session (an update
+ * or a reinstall). The 2026.2 update path reports isUpdate = false to listeners, so the flag is not consulted. The list
+ * is kept in the project's properties because nothing of the old plugin's may outlive it; it is tagged with this
+ * process, so a list left behind by a restart is dropped rather than reopened later. Both callbacks run on the EDT.
  *
  * Before Java 24 every Swing component keeps the protection domains on the stack that built it. Closing a tab here
  * makes the platform rebuild the editor tabs' toolbar inside this call, and that toolbar then keeps the plugin's class
@@ -30,7 +31,7 @@ internal class DotUnloadListener(
         for (project in ProjectManager.getInstance().openProjects) {
             val editors = FileEditorManager.getInstance(project)
             val dotFiles = editors.openFiles.filter { it.fileType == DotFileType }
-            if (isUpdate && dotFiles.isNotEmpty()) {
+            if (dotFiles.isNotEmpty()) {
                 val properties = PropertiesComponent.getInstance(project)
                 properties.setValue(REOPEN_PROCESS_KEY, currentProcess())
                 properties.setList(REOPEN_FILES_KEY, dotFiles.map { it.url })
