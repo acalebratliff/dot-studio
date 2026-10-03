@@ -198,14 +198,27 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     suspend fun show(state: PreviewState) {
         when (state) {
             PreviewState.Rendering -> Unit
+
             is PreviewState.Rendered -> renderedSvg = state.svg
+
             is PreviewState.Failed -> renderedSvg = null
+
+            PreviewState.Empty -> {
+                renderedSvg = null
+                zoom = null
+                // Empty skips the render, which is what usually waits for the page.
+                pageLoad.await()
+            }
         }
         if (pageLoad.isCompleted && pageFailure == null) {
             if (noticeShown) withContext(Dispatchers.EDT) { setContent(browser.component, notice = false) }
             execute(
                 when (state) {
                     PreviewState.Rendering -> "dotStudio.showRendering()"
+
+                    PreviewState.Empty -> "dotStudio.showEmpty(${jsStringLiteral(
+                        DotStudioBundle.message("preview.empty"),
+                    )})"
 
                     is PreviewState.Rendered -> "dotStudio.showSvg(${jsStringLiteral(
                         state.svg,

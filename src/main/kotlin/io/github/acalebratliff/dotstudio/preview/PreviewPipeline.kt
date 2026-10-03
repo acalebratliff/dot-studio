@@ -19,6 +19,9 @@ import kotlin.time.Duration.Companion.seconds
 internal sealed interface PreviewState {
     data object Rendering : PreviewState
 
+    /** The source is empty, or only comments: there is no graph to render, and that is not an error. */
+    data object Empty : PreviewState
+
     /** [graphCount] is how many graphs the source holds; only the first is rendered. */
     data class Rendered(val svg: String, val graphCount: Int = 1) : PreviewState
 
@@ -45,8 +48,12 @@ internal class PreviewPipeline(
             delay(debounce)
             val dot = snapshot.toString()
             val info = inspect(dot)
-            onState(PreviewState.Rendering)
-            onState(render(dot, info))
+            if (info.isBlank) {
+                onState(PreviewState.Empty)
+            } else {
+                onState(PreviewState.Rendering)
+                onState(render(dot, info))
+            }
         }
     }
 

@@ -303,7 +303,7 @@ window.dotStudio = (function () {
       element('message').hidden = true;
       element('notice').textContent = notice || '';
       element('notice').hidden = !notice;
-      document.body.classList.remove('rendering');
+      document.body.classList.remove('rendering', 'empty');
       graph.replaceChildren(shown);
       measure(shown);
       if (view.fitted && !hasArea()) view.fitPending = true;
@@ -332,7 +332,19 @@ window.dotStudio = (function () {
       }
     },
 
+    // No graph to show, and not an error. Forgets the graph, so the next one fits and reports its zoom afresh.
+    showEmpty(text) {
+      element('graph').replaceChildren();
+      element('message').hidden = true;
+      element('notice').hidden = true;
+      element('empty').textContent = text;
+      document.body.classList.remove('rendering', 'pannable');
+      document.body.classList.add('empty');
+      view.reported = '';
+    },
+
     showMessage(text) {
+      document.body.classList.remove('empty');
       element('message').textContent = text;
       element('message').hidden = false;
       document.body.classList.remove('rendering');

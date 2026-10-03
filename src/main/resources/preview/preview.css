@@ -50,6 +50,25 @@ body {
     cursor: grabbing;
 }
 
+/* Not an error: a new file has simply not been written yet. */
+#empty {
+    display: none;
+    flex: auto;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    text-align: center;
+    opacity: 0.6;
+}
+
+.empty #empty {
+    display: flex;
+}
+
+.empty #graph {
+    display: none;
+}
+
 /* A quiet strip under the graph, not a banner: the graph itself is fine. */
 #notice {
     flex: none;

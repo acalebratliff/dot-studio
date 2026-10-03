@@ -118,6 +118,16 @@ internal class PreviewPipelineTest {
         assertEquals(PreviewState.Rendered("<svg/>", graphCount = 2), states.receiveWithin())
     }
 
+    @Test
+    fun `a blank source is empty, not an error, and is not rendered`() = runBlocking {
+        pipeline(inspect = { DotSourceInfo(graphCount = 0, isBlank = true) }).submit("// nothing yet")
+
+        assertEquals(PreviewState.Empty, states.receiveWithin())
+        delay(100.milliseconds)
+        assertTrue(renderer.started.tryReceive().isFailure)
+        assertTrue(states.tryReceive().isFailure)
+    }
+
     private suspend fun renderOnce(result: RenderResult): PreviewState.Failed {
         pipeline().submit("graph")
         renderer.replyTo("graph").complete(result)
