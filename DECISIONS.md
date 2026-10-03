@@ -19,3 +19,7 @@ Product Owner rulings are quoted verbatim. Lead calls are marked **Lead** and ca
 | 2026-10-02 | First change split into two PRs: `docs/process` (process docs and standards) and `feat/scaffold` (build and CI) | Lead |
 | 2026-10-02 | No Claude session URLs in commits or PRs (Product Owner's global CLAUDE.md rule; the scaffold commits are reworded before the first push) | Lead |
 | 2026-10-02 | JCEF availability: preview registrations go in the main plugin.xml (252 has no jcef module). The optional jcef dependency only provides classes on 262. JCEF code is isolated behind a class-availability check plus `isSupported()`, and the fallback is a notice | Lead |
+| 2026-10-02 | Release name: "DOT Studio" | Product Owner |
+| 2026-10-02 | Plugin ID `io.github.acalebratliff.dotstudio`, permanent once uploaded | Product Owner |
+| 2026-10-02 | Vendor email: a new dedicated address, not yet created (address to be filled in here and in `plugin.xml`) | Product Owner |
+| 2026-10-02 | "Build zoom/pan; drop picker." Zoom and pan are in v1.0 (#27); the layout engine picker is dropped, and engines are chosen with `layout=` in the DOT | Product Owner |

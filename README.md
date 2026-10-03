@@ -1,15 +1,19 @@
 # DOT Studio
 
-A JetBrains IDE plugin for Graphviz DOT files. **In development: nothing is released yet.**
+A JetBrains IDE plugin for [Graphviz](https://graphviz.org/) DOT files, with a live preview. It works in IDEs from 2025.2 (build 252) to 2026.2 (build 262).
 
-Planned for version 1.0:
+## Features
 
-- `.dot` and `.gv` file type with syntax highlighting, folding, structure view, brace matching and commenting
-- Live preview in a split editor, rendered in the background, with zoom, pan and a layout engine picker
-- A bundled renderer, so no Graphviz installation is needed
-- SVG and PNG export
+- `.dot` and `.gv` files open as DOT files, with syntax highlighting (colours are set in Settings | Editor | Color Scheme | DOT), syntax error highlighting, folding, brace matching, line and block commenting, and a Structure view of subgraphs, nodes and edges
+- A live preview in a split editor that renders the graph as you type, using the Graphviz layout engines bundled with the plugin, so no Graphviz installation is needed. Set `layout=` in the graph to choose an engine. The preview needs the IDE's embedded browser (JCEF)
+- Export of the rendered graph as SVG or PNG
+- No network calls and no data collection
 
-Target IDEs: 2025.2 (build 252) through 2026.2 (build 262).
+Zoom and pan in the preview are tracked in [#27](https://github.com/acalebratliff/dot-studio/issues/27).
+
+## Install
+
+From the JetBrains Marketplace: Settings | Plugins | Marketplace, search for "DOT Studio". To install a build you made yourself, use Settings | Plugins | gear icon | Install Plugin from Disk and pick the zip from `build/distributions`.
 
 ## Building
 
@@ -24,7 +28,7 @@ Requires JDK 21.
 
 ## Third-party components
 
-The plugin bundles one file, `preview/viz-js/viz-global.js` (1,329,882 bytes), taken unmodified from the `@viz-js/viz` npm package. Source, checksums and the reason for each file: [third_party/viz-js/README.md](third_party/viz-js/README.md). Licence texts and source links ship in the plugin under `META-INF/third-party/`.
+The plugin bundles one file, `preview/viz-js/viz-global.js` (1,329,882 bytes), taken unmodified from the `@viz-js/viz` npm package. Source, checksums and the reason for each file: [third_party/viz-js/README.md](third_party/viz-js/README.md). Licence texts, notices and source links ship in the plugin under `META-INF/third-party/`.
 
 | Component | Version | Licence | Source |
 |---|---|---|---|
@@ -37,7 +41,7 @@ The plugin bundles one file, `preview/viz-js/viz-global.js` (1,329,882 bytes), t
 
 ## Contributing
 
-Read [CODING-STANDARDS.md](CODING-STANDARDS.md). Report bugs and request features through GitHub Issues.
+Read [CODING-STANDARDS.md](CODING-STANDARDS.md) first; CI enforces it. Work happens on a feature branch and goes in through a pull request, and every user-visible change adds a line to [CHANGELOG.md](CHANGELOG.md). Report bugs and request features through [GitHub Issues](https://github.com/acalebratliff/dot-studio/issues).
 
 ## Licence
 

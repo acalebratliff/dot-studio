@@ -4,13 +4,20 @@
     <vendor url="https://github.com/acalebratliff">acalebratliff</vendor>
 
     <description><![CDATA[
-    Support for Graphviz DOT files (<code>.dot</code>, <code>.gv</code>). In development; syntax highlighting, syntax error highlighting, folding, structure view, brace matching and commenting are available.
-    <p>Planned for the first release:</p>
+    Graphviz DOT editing and live preview in JetBrains IDEs.
+    <p>Opens <code>.dot</code> and <code>.gv</code> files with:</p>
     <ul>
-        <li>A live preview in a split editor that renders in the background, with zoom, pan and a layout engine picker</li>
-        <li>A bundled renderer, so no Graphviz installation is needed</li>
-        <li>SVG and PNG export</li>
+        <li>Syntax highlighting, with colours you can change in Settings | Editor | Color Scheme | DOT</li>
+        <li>Syntax error highlighting, including <code>-&gt;</code> in an undirected graph and <code>--</code> in a digraph</li>
+        <li>Code folding, brace matching, and line and block commenting</li>
+        <li>A Structure view of subgraphs, nodes and edges</li>
+        <li>A live preview in a split editor that renders the graph as you type, using the Graphviz layout engine bundled with the plugin, so no Graphviz installation is needed. Choose an engine by setting <code>layout=</code> in the graph</li>
+        <li>Export of the rendered graph as SVG or PNG</li>
+        <!-- TODO(#27): add a zoom and pan bullet once the preview supports them -->
     </ul>
+    <p>Works in IDEs from 2025.2 to 2026.2. The preview needs the IDE's embedded browser (JCEF); without it the editor features still work.</p>
+    <p>The plugin makes no network calls and collects no data.</p>
+    <p>Bundled third-party software: viz-js (MIT), Graphviz (EPL-2.0), Expat (MIT), Emscripten runtime (MIT or NCSA), musl libc (MIT) and libc++ (Apache-2.0 with LLVM exception). Licence texts and notices are in the plugin under <code>META-INF/third-party/</code>.</p>
     <p>Source code and issue tracker: <a href="https://github.com/acalebratliff/dot-studio">github.com/acalebratliff/dot-studio</a></p>
     ]]></description>
 
