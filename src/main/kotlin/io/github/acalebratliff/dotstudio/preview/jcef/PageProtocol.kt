@@ -1,5 +1,7 @@
 package io.github.acalebratliff.dotstudio.preview.jcef
 
+import io.github.acalebratliff.dotstudio.DotStudioBundle
+import io.github.acalebratliff.dotstudio.preview.PreviewState
 import io.github.acalebratliff.dotstudio.preview.PreviewZoom
 import io.github.acalebratliff.dotstudio.preview.RenderResult
 import io.github.acalebratliff.dotstudio.preview.ZoomCommand
@@ -75,4 +77,18 @@ internal fun jsStringLiteral(value: String): String = buildString(value.length +
         }
     }
     append('"')
+}
+
+/**
+ * What replaces a preview whose page cannot show [state], or null for nothing: a failed page load is the notice for
+ * both a failed render and an empty source, so that an empty file does not leave a blank browser. Before the page
+ * has loaded ([pageFailure] null) only a failed render has anything to say.
+ */
+internal fun swingNoticeText(state: PreviewState, pageFailure: String?): String? = when {
+    pageFailure != null && state != PreviewState.Rendering ->
+        DotStudioBundle.message("preview.error.page", pageFailure)
+
+    state is PreviewState.Failed -> state.message
+
+    else -> null
 }

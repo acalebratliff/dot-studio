@@ -1,8 +1,10 @@
 package io.github.acalebratliff.dotstudio.preview
 
+import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.jcef.PageReply
 import io.github.acalebratliff.dotstudio.preview.jcef.jsStringLiteral
 import io.github.acalebratliff.dotstudio.preview.jcef.parsePageReply
+import io.github.acalebratliff.dotstudio.preview.jcef.swingNoticeText
 import io.github.acalebratliff.dotstudio.preview.jcef.zoomScript
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -84,5 +86,20 @@ internal class PageProtocolTest {
             "\"digraph { a [label=\\\"x\\\\\\\"); alert(1); (\\\"\\\"]; }\\u000a\\u2028\\u0000\"",
             jsStringLiteral(dot),
         )
+    }
+
+    @Test
+    fun `after a page load failure an empty source shows the failure notice, not a blank browser`() {
+        val expected = DotStudioBundle.message("preview.error.page", "HTTP 404")
+        assertEquals(expected, swingNoticeText(PreviewState.Empty, "HTTP 404"))
+        assertEquals(expected, swingNoticeText(PreviewState.Failed("render failed"), "HTTP 404"))
+        assertNull(swingNoticeText(PreviewState.Rendering, "HTTP 404"))
+    }
+
+    @Test
+    fun `before the page has loaded only a failed render goes to a notice`() {
+        assertEquals("render failed", swingNoticeText(PreviewState.Failed("render failed"), null))
+        assertNull(swingNoticeText(PreviewState.Empty, null))
+        assertNull(swingNoticeText(PreviewState.Rendered("<svg/>"), null))
     }
 }

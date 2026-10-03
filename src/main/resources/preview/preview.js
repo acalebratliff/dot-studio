@@ -294,14 +294,16 @@ window.dotStudio = (function () {
     },
 
     // A re-render keeps the zoom and scroll position; until the user zooms, it fits the new graph instead.
-    showSvg(svg) {
+    showSvg(svg, notice) {
       const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml');
       const graph = element('graph');
       const left = graph.scrollLeft;
       const top = graph.scrollTop;
       const shown = document.importNode(parsed.documentElement, true);
       element('message').hidden = true;
-      document.body.classList.remove('rendering');
+      element('notice').textContent = notice || '';
+      element('notice').hidden = !notice;
+      document.body.classList.remove('rendering', 'empty');
       graph.replaceChildren(shown);
       measure(shown);
       if (view.fitted && !hasArea()) view.fitPending = true;
@@ -330,7 +332,19 @@ window.dotStudio = (function () {
       }
     },
 
+    // No graph to show, and not an error. Forgets the graph, so the next one fits and reports its zoom afresh.
+    showEmpty(text) {
+      element('graph').replaceChildren();
+      element('message').hidden = true;
+      element('notice').hidden = true;
+      element('empty').textContent = text;
+      document.body.classList.remove('rendering', 'pannable');
+      document.body.classList.add('empty');
+      view.reported = '';
+    },
+
     showMessage(text) {
+      document.body.classList.remove('empty');
       element('message').textContent = text;
       element('message').hidden = false;
       document.body.classList.remove('rendering');

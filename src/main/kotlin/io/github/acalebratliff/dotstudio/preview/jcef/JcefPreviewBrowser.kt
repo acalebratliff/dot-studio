@@ -10,13 +10,13 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
 import io.github.acalebratliff.dotstudio.DotStudioBundle
 import io.github.acalebratliff.dotstudio.preview.DotRenderer
 import io.github.acalebratliff.dotstudio.preview.PngResult
+import io.github.acalebratliff.dotstudio.preview.PreviewNotice
 import io.github.acalebratliff.dotstudio.preview.PreviewState
 import io.github.acalebratliff.dotstudio.preview.PreviewZoom
 import io.github.acalebratliff.dotstudio.preview.RenderResult
@@ -198,24 +198,45 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
     suspend fun show(state: PreviewState) {
         when (state) {
             PreviewState.Rendering -> Unit
+
             is PreviewState.Rendered -> renderedSvg = state.svg
+
             is PreviewState.Failed -> renderedSvg = null
+
+            PreviewState.Empty -> {
+                renderedSvg = null
+                zoom = null
+                // Empty skips the render, which is what usually waits for the page.
+                pageLoad.await()
+            }
         }
         if (pageLoad.isCompleted && pageFailure == null) {
             if (noticeShown) withContext(Dispatchers.EDT) { setContent(browser.component, notice = false) }
             execute(
                 when (state) {
                     PreviewState.Rendering -> "dotStudio.showRendering()"
-                    is PreviewState.Rendered -> "dotStudio.showSvg(${jsStringLiteral(state.svg)})"
+
+                    PreviewState.Empty -> "dotStudio.showEmpty(${jsStringLiteral(
+                        DotStudioBundle.message("preview.empty"),
+                    )})"
+
+                    is PreviewState.Rendered -> "dotStudio.showSvg(${jsStringLiteral(
+                        state.svg,
+                    )}, ${jsStringLiteral(noticeFor(state))})"
+
                     is PreviewState.Failed -> "dotStudio.showMessage(${jsStringLiteral(state.message)})"
                 },
             )
-        } else if (state is PreviewState.Failed) {
-            // The page cannot show anything yet (or ever), so the failure goes to a Swing notice instead.
-            val message = pageFailure?.let { DotStudioBundle.message("preview.error.page", it) } ?: state.message
-            withContext(Dispatchers.EDT) { setContent(JBPanelWithEmptyText().withEmptyText(message), notice = true) }
+        } else {
+            // The page cannot show anything yet (or ever), so what it would say goes to a Swing notice instead.
+            val message = swingNoticeText(state, pageFailure)
+            if (message != null) withContext(Dispatchers.EDT) { setContent(PreviewNotice(message), notice = true) }
         }
     }
+
+    // Empty when the page needs no notice. Only the first graph of a file is rendered, so the page says so.
+    private fun noticeFor(state: PreviewState.Rendered): String =
+        if (state.graphCount > 1) DotStudioBundle.message("preview.notice.multiple.graphs") else ""
 
     fun zoom(command: ZoomCommand) {
         if (pageLoad.isCompleted && pageFailure == null) execute(zoomScript(command))
