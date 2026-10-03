@@ -50,3 +50,5 @@ Read [CODING-STANDARDS.md](CODING-STANDARDS.md) first; CI enforces it. Work happ
 ## Licence
 
 Apache-2.0, see [LICENSE](LICENSE).
+
+Published by Mendworks, contact@mendworks.dev.

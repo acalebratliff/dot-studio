@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>io.github.acalebratliff.dotstudio</id>
     <name>DOT Studio</name>
-    <vendor url="https://github.com/acalebratliff">acalebratliff</vendor>
+    <vendor email="contact@mendworks.dev" url="https://github.com/acalebratliff/dot-studio">Mendworks</vendor>
 
     <description><![CDATA[
     Graphviz DOT editing and live preview in JetBrains IDEs.

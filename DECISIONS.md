@@ -21,7 +21,7 @@ Product Owner rulings are quoted verbatim. Lead calls are marked **Lead** and ca
 | 2026-10-02 | JCEF availability: preview registrations go in the main plugin.xml (252 has no jcef module). The optional jcef dependency only provides classes on 262. JCEF code is isolated behind a class-availability check plus `isSupported()`, and the fallback is a notice | Lead |
 | 2026-10-02 | Release name: "DOT Studio" | Product Owner |
 | 2026-10-02 | Plugin ID `io.github.acalebratliff.dotstudio`, permanent once uploaded | Product Owner |
-| 2026-10-02 | Vendor email: a new dedicated address, not yet created (address to be filled in here and in `plugin.xml`) | Product Owner |
+| 2026-10-02 | Vendor email: contact@mendworks.dev (domain mendworks.dev, with Cloudflare Email Routing) | Product Owner |
 | 2026-10-02 | "Build zoom/pan; drop picker." Zoom and pan are in v1.0 (#27); the layout engine picker is dropped, and engines are chosen with `layout=` in the DOT | Product Owner |
 | 2026-10-02 | 2025.2 unload: "Accept as known limitation". The leaks were proven platform-side (#26, #33); standards §1.4 records the exception and requires runtime unload proof | Product Owner |
 | 2026-10-02 | Branch sync: "Merge main in, never rebase" | Product Owner |
@@ -29,3 +29,4 @@ Product Owner rulings are quoted verbatim. Lead calls are marked **Lead** and ca
 | 2026-10-02 | Preview graphs keep Graphviz's own colours and background in dark themes (a white card), so explicit DOT colours are respected | Lead |
 | 2026-10-02 | DOT files closed on unload reopen whenever the plugin loads again in the same session (262 passes `isUpdate=false` on update) | Lead |
 | 2026-10-02 | The JCEF first-init SEVERE (#20) is a confirmed platform bug, already tracked as IJPL-212214. No new report is filed; the workaround from #24 stays | Lead |
+| 2026-10-02 | Umbrella brand and vendor name: Mendworks. "I'm fine with Mendworks" (name check in vault `brand-name-check.md`) | Product Owner |
