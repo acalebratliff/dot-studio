@@ -70,18 +70,22 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
 
     val component: JComponent get() = root
 
+    // Runs on a CEF thread, so it only completes a deferred that a coroutine is waiting on.
+    private val replyHandler = DetachableQueryHandler { payload ->
+        when (val reply = parsePageReply(payload)) {
+            null -> LOG.warn("Ignoring a malformed reply from the preview page")
+            is PageReply.Render -> pendingRenders[reply.id]?.complete(reply.result)
+            is PageReply.PngReply -> pendingPngs[reply.id]?.complete(reply)
+        }
+        null
+    }
+
     init {
         Disposer.register(parent, browser)
         Disposer.register(parent, replyQuery)
-        // Runs on a CEF thread, so it only completes a deferred that a coroutine is waiting on.
-        replyQuery.addHandler { payload ->
-            when (val reply = parsePageReply(payload)) {
-                null -> LOG.warn("Ignoring a malformed reply from the preview page")
-                is PageReply.Render -> pendingRenders[reply.id]?.complete(reply.result)
-                is PageReply.PngReply -> pendingPngs[reply.id]?.complete(reply)
-            }
-            null
-        }
+        replyQuery.addHandler(replyHandler.handler)
+        // A child is disposed before its parent, so the handler lets go of this browser before the query goes.
+        Disposer.register(replyQuery) { replyHandler.detach() }
         browser.jbCefClient.addRequestHandler(PreviewRequestHandler { id -> exportSvgs[id] }, browser.cefBrowser)
         browser.jbCefClient.addLoadHandler(
             object : CefLoadHandlerAdapter() {
