@@ -19,3 +19,5 @@ Product Owner rulings are quoted verbatim. Lead calls are marked **Lead** and ca
 | 2026-10-02 | First change split into two PRs: `docs/process` (process docs and standards) and `feat/scaffold` (build and CI) | Lead |
 | 2026-10-02 | No Claude session URLs in commits or PRs (Product Owner's global CLAUDE.md rule; the scaffold commits are reworded before the first push) | Lead |
 | 2026-10-02 | JCEF availability: preview registrations go in the main plugin.xml (252 has no jcef module). The optional jcef dependency only provides classes on 262. JCEF code is isolated behind a class-availability check plus `isSupported()`, and the fallback is a notice | Lead |
+| 2026-10-02 | 2025.2 unload: "Accept as known limitation". The leaks were proven platform-side (#26, #33); standards §1.4 records the exception and requires runtime unload proof | Product Owner |
+| 2026-10-02 | Branch sync: "Merge main in, never rebase" | Product Owner |
