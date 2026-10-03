@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-02
+
 ### Added
 
 - `.dot` and `.gv` files open as DOT files, with syntax highlighting for keywords, IDs, numbers, quoted and HTML strings, comments and edge operators
@@ -24,3 +26,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The preview says "Only the first graph is previewed" under the graph when a file holds more than one graph, because Graphviz renders only the first
 - An empty file, or one with only comments, shows "Nothing to preview yet" in the preview instead of an error
 - The notice shown when the IDE has no embedded browser (JCEF) wraps to the width of the preview instead of running off its edge
+- On IDE 2026.2 the plugin can be updated or uninstalled without restarting the IDE. Open DOT files are closed during an update and reopened when the new version loads
