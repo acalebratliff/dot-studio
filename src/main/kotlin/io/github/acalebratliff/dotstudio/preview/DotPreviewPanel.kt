@@ -15,7 +15,7 @@ import javax.swing.JComponent
  * The live preview of one DOT document. Renders and exports run in [scope] and stop when [parent] is disposed.
  * Without JCEF it shows a notice instead; JCEF classes are touched only after [isJcefAvailable] passes.
  */
-internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope) {
+internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope, inspect: suspend (String) -> DotSourceInfo) {
     private val pipeline: PreviewPipeline?
     private val browser: JcefPreviewBrowser?
     val component: JComponent
@@ -43,7 +43,7 @@ internal class DotPreviewPanel(parent: Disposable, scope: CoroutineScope) {
             service<JcefProxyPreload>().beforeFirstBrowser()
             val jcefBrowser = JcefPreviewBrowser(parent)
             browser = jcefBrowser
-            pipeline = PreviewPipeline(scope, jcefBrowser, jcefBrowser::show)
+            pipeline = PreviewPipeline(scope, jcefBrowser, jcefBrowser::show, inspect)
             Disposer.register(parent, pipeline)
             component = jcefBrowser.component
         } else {

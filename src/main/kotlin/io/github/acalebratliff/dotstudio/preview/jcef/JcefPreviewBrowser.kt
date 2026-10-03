@@ -206,7 +206,11 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
             execute(
                 when (state) {
                     PreviewState.Rendering -> "dotStudio.showRendering()"
-                    is PreviewState.Rendered -> "dotStudio.showSvg(${jsStringLiteral(state.svg)})"
+
+                    is PreviewState.Rendered -> "dotStudio.showSvg(${jsStringLiteral(
+                        state.svg,
+                    )}, ${jsStringLiteral(noticeFor(state))})"
+
                     is PreviewState.Failed -> "dotStudio.showMessage(${jsStringLiteral(state.message)})"
                 },
             )
@@ -216,6 +220,10 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
             withContext(Dispatchers.EDT) { setContent(JBPanelWithEmptyText().withEmptyText(message), notice = true) }
         }
     }
+
+    // Empty when the page needs no notice. Only the first graph of a file is rendered, so the page says so.
+    private fun noticeFor(state: PreviewState.Rendered): String =
+        if (state.graphCount > 1) DotStudioBundle.message("preview.notice.multiple.graphs") else ""
 
     fun zoom(command: ZoomCommand) {
         if (pageLoad.isCompleted && pageFailure == null) execute(zoomScript(command))

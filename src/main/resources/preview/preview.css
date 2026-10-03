@@ -50,6 +50,15 @@ body {
     cursor: grabbing;
 }
 
+/* A quiet strip under the graph, not a banner: the graph itself is fine. */
+#notice {
+    flex: none;
+    padding: 4px 12px;
+    font-size: 12px;
+    opacity: 0.8;
+    border-top: 1px solid var(--error-border, #f2b6bb);
+}
+
 .rendering #graph {
     opacity: 0.6;
 }

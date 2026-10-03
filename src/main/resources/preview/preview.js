@@ -294,13 +294,15 @@ window.dotStudio = (function () {
     },
 
     // A re-render keeps the zoom and scroll position; until the user zooms, it fits the new graph instead.
-    showSvg(svg) {
+    showSvg(svg, notice) {
       const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml');
       const graph = element('graph');
       const left = graph.scrollLeft;
       const top = graph.scrollTop;
       const shown = document.importNode(parsed.documentElement, true);
       element('message').hidden = true;
+      element('notice').textContent = notice || '';
+      element('notice').hidden = !notice;
       document.body.classList.remove('rendering');
       graph.replaceChildren(shown);
       measure(shown);
