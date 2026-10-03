@@ -13,9 +13,10 @@
         <li>A Structure view of subgraphs, nodes and edges</li>
         <li>A live preview in a split editor that renders the graph as you type, using the Graphviz layout engine bundled with the plugin, so no Graphviz installation is needed. Choose an engine by setting <code>layout=</code> in the graph</li>
         <li>Export of the rendered graph as SVG or PNG</li>
-        <!-- TODO(#27): add a zoom and pan bullet once the preview supports them -->
+        <li>Zoom and pan in the preview: Ctrl/Cmd+mouse wheel zooms, Zoom In, Zoom Out, Actual Size and Zoom to Fit are on the editor toolbar, and dragging the graph pans it</li>
     </ul>
     <p>Works in IDEs from 2025.2 to 2026.2. The preview needs the IDE's embedded browser (JCEF); without it the editor features still work.</p>
+    <p>Known limitation: on IDEs 2025.2, uninstalling the plugin after using the preview may require an IDE restart (<a href="https://github.com/acalebratliff/dot-studio/issues/26">#26</a>). Uninstalling without a restart has been verified on 2026.2.</p>
     <p>The plugin makes no network calls and collects no data.</p>
     <p>Bundled third-party software: viz-js (MIT), Graphviz (EPL-2.0), Expat (MIT), Emscripten runtime (MIT or NCSA), musl libc (MIT) and libc++ (Apache-2.0 with LLVM exception). Licence texts and notices are in the plugin under <code>META-INF/third-party/</code>.</p>
     <p>Source code and issue tracker: <a href="https://github.com/acalebratliff/dot-studio">github.com/acalebratliff/dot-studio</a></p>

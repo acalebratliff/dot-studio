@@ -6,10 +6,14 @@ A JetBrains IDE plugin for [Graphviz](https://graphviz.org/) DOT files, with a l
 
 - `.dot` and `.gv` files open as DOT files, with syntax highlighting (colours are set in Settings | Editor | Color Scheme | DOT), syntax error highlighting, folding, brace matching, line and block commenting, and a Structure view of subgraphs, nodes and edges
 - A live preview in a split editor that renders the graph as you type, using the Graphviz layout engines bundled with the plugin, so no Graphviz installation is needed. Set `layout=` in the graph to choose an engine. The preview needs the IDE's embedded browser (JCEF)
+- Zoom and pan in the preview: Ctrl/Cmd+mouse wheel zooms, Zoom In, Zoom Out, Actual Size and Zoom to Fit are on the editor toolbar, and dragging the graph pans it
 - Export of the rendered graph as SVG or PNG
 - No network calls and no data collection
 
-Zoom and pan in the preview are tracked in [#27](https://github.com/acalebratliff/dot-studio/issues/27).
+## Known limitations
+
+- On IDEs 2025.2, uninstalling the plugin after using the preview may require an IDE restart ([#26](https://github.com/acalebratliff/dot-studio/issues/26)). Uninstalling without a restart has been verified on 2026.2.
+- When a file holds more than one graph, only the first is previewed, because Graphviz renders only the first.
 
 ## Install
 
