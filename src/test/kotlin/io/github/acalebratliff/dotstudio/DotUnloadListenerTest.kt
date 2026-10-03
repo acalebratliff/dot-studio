@@ -14,10 +14,10 @@ internal class DotUnloadListenerTest : BasePlatformTestCase() {
         val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
         val txt = myFixture.configureByText("notes.txt", "text").virtualFile
 
-        DotUnloadListener().beforePluginUnload(plugin("com.intellij"), isUpdate = false)
+        DotUnloadListener(closesFiles = true).beforePluginUnload(plugin("com.intellij"), isUpdate = false)
         assertTrue(editors.isFileOpen(dot))
 
-        DotUnloadListener().beforePluginUnload(ours(), isUpdate = false)
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
         assertFalse(editors.isFileOpen(dot))
         assertTrue(editors.isFileOpen(txt))
     }
@@ -25,29 +25,37 @@ internal class DotUnloadListenerTest : BasePlatformTestCase() {
     fun testReopensDotFilesWhenTheUpdatedVersionLoads() {
         val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
 
-        DotUnloadListener().beforePluginUnload(ours(), isUpdate = true)
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = true)
         assertFalse(editors.isFileOpen(dot))
 
-        DotUnloadListener().pluginLoaded(ours())
+        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
         assertTrue(editors.isFileOpen(dot))
     }
 
     fun testDoesNotReopenAfterUninstallAndInstall() {
         val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
 
-        DotUnloadListener().beforePluginUnload(ours(), isUpdate = false)
-        DotUnloadListener().pluginLoaded(ours())
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = false)
+        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
         assertFalse(editors.isFileOpen(dot))
     }
 
     fun testDropsAListLeftByAnotherProcess() {
         val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
-        DotUnloadListener().beforePluginUnload(ours(), isUpdate = true)
+        DotUnloadListener(closesFiles = true).beforePluginUnload(ours(), isUpdate = true)
         // As if the update had ended in a restart: the list was saved by an earlier process.
         PropertiesComponent.getInstance(project).setValue("dot-studio.reopen-after-update.process", "-1")
 
-        DotUnloadListener().pluginLoaded(ours())
+        DotUnloadListener(closesFiles = true).pluginLoaded(ours())
         assertFalse(editors.isFileOpen(dot))
+        assertNull(PropertiesComponent.getInstance(project).getList("dot-studio.reopen-after-update.files"))
+    }
+
+    fun testLeavesFilesToThePlatformWhenClosingWouldPinTheClassLoader() {
+        val dot = myFixture.configureByText("graph.dot", "digraph {}").virtualFile
+
+        DotUnloadListener(closesFiles = false).beforePluginUnload(ours(), isUpdate = true)
+        assertTrue(editors.isFileOpen(dot))
         assertNull(PropertiesComponent.getInstance(project).getList("dot-studio.reopen-after-update.files"))
     }
 
