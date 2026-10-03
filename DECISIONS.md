@@ -23,3 +23,5 @@ Product Owner rulings are quoted verbatim. Lead calls are marked **Lead** and ca
 | 2026-10-02 | Plugin ID `io.github.acalebratliff.dotstudio`, permanent once uploaded | Product Owner |
 | 2026-10-02 | Vendor email: a new dedicated address, not yet created (address to be filled in here and in `plugin.xml`) | Product Owner |
 | 2026-10-02 | "Build zoom/pan; drop picker." Zoom and pan are in v1.0 (#27); the layout engine picker is dropped, and engines are chosen with `layout=` in the DOT | Product Owner |
+| 2026-10-02 | 2025.2 unload: "Accept as known limitation". The leaks were proven platform-side (#26, #33); standards §1.4 records the exception and requires runtime unload proof | Product Owner |
+| 2026-10-02 | Branch sync: "Merge main in, never rebase" | Product Owner |
