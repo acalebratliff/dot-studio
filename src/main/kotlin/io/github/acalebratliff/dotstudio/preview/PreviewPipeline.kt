@@ -29,14 +29,14 @@ internal sealed interface PreviewState {
 }
 
 /**
- * Renders the latest submitted DOT source after [debounce] of quiet, having asked [inspect] about it. A newer submission cancels the render in
- * progress, so a superseded render never reaches [onState]. Disposing stops everything.
+ * Renders the latest submitted DOT source after [debounce] of quiet, having asked [inspect] about it. A newer
+ * submission cancels the render in progress, so a superseded render never reaches [onState]. Disposing stops everything.
  */
 internal class PreviewPipeline(
     scope: CoroutineScope,
     private val renderer: DotRenderer,
     private val onState: suspend (PreviewState) -> Unit,
-    private val inspect: suspend (String) -> DotSourceInfo = { DotSourceInfo(graphCount = 1) },
+    private val inspect: suspend (String) -> DotSourceInfo,
     private val debounce: Duration = 300.milliseconds,
     private val timeout: Duration = 10.seconds,
 ) : Disposable {
@@ -57,7 +57,10 @@ internal class PreviewPipeline(
         }
     }
 
-    /** [dot] must be an immutable snapshot; it is turned into a String only after the debounce, off the caller's thread. */
+    /**
+     * [dot] must be an immutable snapshot; it is turned into a String only after the debounce, off the caller's
+     * thread.
+     */
     fun submit(dot: CharSequence) {
         source.value = dot
     }

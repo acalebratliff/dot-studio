@@ -227,10 +227,10 @@ internal class JcefPreviewBrowser(parent: Disposable) : DotRenderer {
                     is PreviewState.Failed -> "dotStudio.showMessage(${jsStringLiteral(state.message)})"
                 },
             )
-        } else if (state is PreviewState.Failed) {
-            // The page cannot show anything yet (or ever), so the failure goes to a Swing notice instead.
-            val message = pageFailure?.let { DotStudioBundle.message("preview.error.page", it) } ?: state.message
-            withContext(Dispatchers.EDT) { setContent(PreviewNotice(message), notice = true) }
+        } else {
+            // The page cannot show anything yet (or ever), so what it would say goes to a Swing notice instead.
+            val message = swingNoticeText(state, pageFailure)
+            if (message != null) withContext(Dispatchers.EDT) { setContent(PreviewNotice(message), notice = true) }
         }
     }
 
