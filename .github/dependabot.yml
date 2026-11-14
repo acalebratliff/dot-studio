@@ -4,7 +4,7 @@ updates:
     directory: "/"
     target-branch: main
     schedule:
-      interval: weekly
+      interval: monthly
     ignore:
       # Held at the last Kotlin release that compiles API 2.1 without deprecation while sinceBuild is 252.
       - dependency-name: "org.jetbrains.kotlin*"
@@ -13,4 +13,4 @@ updates:
     directory: "/"
     target-branch: main
     schedule:
-      interval: weekly
+      interval: monthly
